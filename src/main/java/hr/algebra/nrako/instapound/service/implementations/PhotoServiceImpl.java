@@ -2,16 +2,18 @@ package hr.algebra.nrako.instapound.service.implementations;
 
 import hr.algebra.nrako.instapound.model.dto.PhotoResponse;
 import hr.algebra.nrako.instapound.model.dto.PhotoSearchRequest;
-import hr.algebra.nrako.instapound.model.entity.ActionLog;
 import hr.algebra.nrako.instapound.model.entity.Hashtag;
 import hr.algebra.nrako.instapound.model.entity.Photo;
 import hr.algebra.nrako.instapound.model.entity.User;
-import hr.algebra.nrako.instapound.repository.ActionLogRepository;
 import hr.algebra.nrako.instapound.repository.HashtagRepository;
 import hr.algebra.nrako.instapound.repository.PhotoRepository;
 import hr.algebra.nrako.instapound.repository.UserRepository;
 import hr.algebra.nrako.instapound.service.interfaces.PhotoService;
+import hr.algebra.nrako.instapound.specification.PhotoSpecification;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
@@ -58,16 +60,18 @@ public class PhotoServiceImpl implements PhotoService {
         Photo photo = existingPhotoOpt.get();
 
         Set<Hashtag> hashtags = new HashSet<>();
-        for (String tag : photoResponse.getHashtags()) {
-            Hashtag hashtag = hashtagRepository.findByTag(tag);
-            if (hashtag == null) {
-                Hashtag newTag = Hashtag.builder()
-                        .withTag(tag)
-                        .build();
-                hashtagRepository.save(newTag);
+        if (photoResponse.getHashtags() != null) {
+            for (String tag : photoResponse.getHashtags()) {
+                Hashtag hashtag = hashtagRepository.findByTag(tag);
+                if (hashtag == null) {
+                    hashtag = Hashtag.builder()
+                            .withTag(tag)
+                            .build();
+                    hashtag = hashtagRepository.save(hashtag);
+                }
+                hashtag.incrementUsage();
+                hashtags.add(hashtag);
             }
-            hashtag.incrementUsage();
-            hashtags.add(hashtag);
         }
 
         photo.setDescription(photoResponse.getDescription());
@@ -80,17 +84,38 @@ public class PhotoServiceImpl implements PhotoService {
 
     @Override
     public void deleteById(Long id) {
-
+        if (photoRepository.existsById(id)) {
+            photoRepository.deleteById(id);
+        }
     }
 
     @Override
     public List<PhotoResponse> filterByUser(String username) {
-        return List.of();
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return List.of();
+        }
+        // Use a reasonable page size limit to avoid memory issues
+        Pageable pageable = PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "uploadedAt"));
+        return photoRepository.findByUserOrderByUploadedAtDesc(user, pageable)
+                .getContent()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<PhotoResponse> filterByParams(PhotoSearchRequest searchRequest) {
-        return List.of();
+        Pageable pageable = PageRequest.of(
+                searchRequest.getPage() != null ? searchRequest.getPage() : 0,
+                searchRequest.getPageSize() != null ? searchRequest.getPageSize() : 10,
+                Sort.by(Sort.Direction.DESC, "uploadedAt")
+        );
+        return photoRepository.findAll(PhotoSpecification.fromSearchRequest(searchRequest), pageable)
+                .getContent()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     private PhotoResponse toDto(Photo photo) {
