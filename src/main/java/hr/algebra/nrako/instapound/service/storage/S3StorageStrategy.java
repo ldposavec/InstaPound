@@ -50,7 +50,7 @@ public class S3StorageStrategy implements StorageStrategy {
 
     @Override
     public StorageType getStorageType() {
-        return StorageType.CLOUDINARY;
+        return StorageType.S3;
     }
 
     @Override

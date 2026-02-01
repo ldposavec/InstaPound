@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 /**
  * Security Configuration - implements part of the Template Method pattern
@@ -30,7 +31,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            // CSRF protection with cookie-based token for REST API
+            // Disabled only for API endpoints that use token-based auth and H2 console
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**", "/h2-console/**")
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/api/photos/browse/**", "/api/photos/search/**", 
                         "/api/photos/file/**", "/api/photos/{id}", "/api/user/packages",
@@ -62,7 +68,10 @@ public class SecurityConfig {
     @ConditionalOnProperty(name = "spring.security.oauth2.client.registration.google.client-id")
     public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http, CustomOAuth2UserService oAuth2UserService) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**", "/h2-console/**")
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/api/photos/browse/**", "/api/photos/search/**",
                         "/api/photos/file/**", "/api/photos/{id}", "/api/user/packages",
