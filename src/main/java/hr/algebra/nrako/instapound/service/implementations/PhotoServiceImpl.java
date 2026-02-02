@@ -11,10 +11,12 @@ import hr.algebra.nrako.instapound.repository.UserRepository;
 import hr.algebra.nrako.instapound.service.interfaces.PhotoService;
 import hr.algebra.nrako.instapound.specification.PhotoSpecification;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
@@ -46,12 +48,14 @@ public class PhotoServiceImpl implements PhotoService {
     }
 
     @Override
+    @Transactional
     public PhotoResponse save(PhotoResponse photoResponse) throws ParseException {
         Photo photo = photoRepository.save(toEntity(photoResponse));
         return toDto(photo);
     }
 
     @Override
+    @Transactional
     public Optional<PhotoResponse> update(PhotoResponse photoResponse) throws ParseException {
         Optional<Photo> existingPhotoOpt = photoRepository.findById(photoResponse.getId());
         if (existingPhotoOpt.isEmpty()) {
@@ -83,6 +87,7 @@ public class PhotoServiceImpl implements PhotoService {
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
         if (photoRepository.existsById(id)) {
             photoRepository.deleteById(id);
@@ -90,32 +95,24 @@ public class PhotoServiceImpl implements PhotoService {
     }
 
     @Override
-    public List<PhotoResponse> filterByUser(String username) {
+    public Page<PhotoResponse> filterByUser(String username, Pageable pageable) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
-            return List.of();
+            return Page.empty(pageable);
         }
-        // Use a reasonable page size limit to avoid memory issues
-        Pageable pageable = PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "uploadedAt"));
         return photoRepository.findByUserOrderByUploadedAtDesc(user, pageable)
-                .getContent()
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+                .map(this::toDto);
     }
 
     @Override
-    public List<PhotoResponse> filterByParams(PhotoSearchRequest searchRequest) {
+    public Page<PhotoResponse> filterByParams(PhotoSearchRequest searchRequest) {
         Pageable pageable = PageRequest.of(
                 searchRequest.getPage() != null ? searchRequest.getPage() : 0,
                 searchRequest.getPageSize() != null ? searchRequest.getPageSize() : 10,
                 Sort.by(Sort.Direction.DESC, "uploadedAt")
         );
         return photoRepository.findAll(PhotoSpecification.fromSearchRequest(searchRequest), pageable)
-                .getContent()
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+                .map(this::toDto);
     }
 
     private PhotoResponse toDto(Photo photo) {

@@ -152,9 +152,8 @@ public class AdminController {
             return ResponseEntity.badRequest().body("Cannot delete your own account");
         }
 
-        // Delete all user's photos first
-        List<Photo> userPhotos = photoRepository.findByUserOrderByUploadedAtDesc(user, 
-                PageRequest.of(0, Integer.MAX_VALUE)).getContent();
+        // Delete all user's photos first (files from storage)
+        List<Photo> userPhotos = photoRepository.findByUser(user);
         for (Photo photo : userPhotos) {
             try {
                 storageService.delete(photo.getStoredFileName(), photo.getStorageType());

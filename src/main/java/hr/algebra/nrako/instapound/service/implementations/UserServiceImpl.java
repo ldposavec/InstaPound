@@ -1,6 +1,5 @@
 package hr.algebra.nrako.instapound.service.implementations;
 
-import hr.algebra.nrako.instapound.model.dto.UserResponse;
 import hr.algebra.nrako.instapound.model.entity.User;
 import hr.algebra.nrako.instapound.repository.UserRepository;
 import hr.algebra.nrako.instapound.service.interfaces.UserService;
@@ -18,8 +17,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User save(User user) {
-        userRepository.save(user);
-        return user;
+        return userRepository.save(user);
     }
 
     @Override
@@ -35,23 +33,5 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> getByUsername(String username) {
         return Optional.ofNullable(userRepository.findByUsername(username));
-    }
-
-    private User toDto(User user) {
-        return user;
-    }
-
-    private UserResponse mapToResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .packageType(user.getPackageType())
-                .packageUsage(user.getPackageUsage())
-                .pendingPackageType(user.getPendingPackageType())
-                .createdAt(user.getCreatedAt())
-                .lastLoginAt(user.getLastLoginAt())
-                .build();
     }
 }
