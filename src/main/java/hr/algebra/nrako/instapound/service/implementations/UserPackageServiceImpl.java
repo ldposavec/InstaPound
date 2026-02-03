@@ -98,6 +98,7 @@ public class UserPackageServiceImpl implements UserPackageService {
                 user.setPackageType(user.getPendingPackageType());
                 user.setPendingPackageType(null);
                 user.setPackageChangeEffectiveDate(null);
+                user.setLastPackageChangeDate(LocalDate.now());
                 userRepository.save(user);
 
                 log.info("Applied package change for user {}: {} -> {}", user.getUsername(), oldPackage, user.getPackageType());

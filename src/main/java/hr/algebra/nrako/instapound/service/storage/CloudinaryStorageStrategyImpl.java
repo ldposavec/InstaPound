@@ -84,7 +84,13 @@ public class CloudinaryStorageStrategyImpl implements StorageStrategy {
 
         try {
             String url = getUrl(filename);
-            return URI.create(url).toURL().openStream();
+            // Validate URL points to Cloudinary domain to prevent SSRF attacks
+            URI uri = URI.create(url);
+            String host = uri.getHost();
+            if (host == null || !host.endsWith("cloudinary.com")) {
+                throw new IOException("Invalid Cloudinary URL: " + url);
+            }
+            return uri.toURL().openStream();
         } catch (Exception e) {
             log.error("Error retrieving from Cloudinary: {}", e.getMessage());
             throw new IOException("Failed to retrieve from Cloudinary: " + e.getMessage(), e);
