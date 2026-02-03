@@ -65,10 +65,10 @@ public class PhotoServiceImpl implements PhotoService {
             for (String tag : photoResponse.getHashtags()) {
                 Hashtag hashtag = hashtagRepository.findByTag(tag);
                 if (hashtag == null) {
-                    Hashtag newTag = Hashtag.builder()
+                    hashtag = Hashtag.builder()
                             .withTag(tag)
                             .build();
-                    hashtagRepository.save(newTag);
+                    hashtag = hashtagRepository.save(hashtag);
                 }
                 hashtag.incrementUsage();
                 hashtags.add(hashtag);

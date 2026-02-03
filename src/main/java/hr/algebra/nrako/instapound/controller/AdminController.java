@@ -196,8 +196,8 @@ public class AdminController {
 
     @GetMapping("/logs/range")
     public ResponseEntity<Page<ActionLogResponse>> getLogsByDateRange(
-            @PathVariable String from,
-            @PathVariable String to,
+            @RequestParam String from,
+            @RequestParam String to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
