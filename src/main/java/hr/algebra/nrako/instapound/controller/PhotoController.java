@@ -99,9 +99,17 @@ public class PhotoController {
             String storedFilename = UUID.randomUUID().toString() + extension;
 
             byte[] imageData = file.getBytes();
-            Set<ImageFilter> imageFilters = filters != null
-                    ? filters.stream().map(f -> ImageFilter.valueOf(f.toUpperCase())).collect(Collectors.toSet())
-                    : new HashSet<>();
+            Set<ImageFilter> imageFilters = new HashSet<>();
+            if (filters != null) {
+                for (String f : filters) {
+                    try {
+                        imageFilters.add(ImageFilter.valueOf(f.toUpperCase()));
+                    } catch (IllegalArgumentException e) {
+                        return ResponseEntity.badRequest()
+                                .body("Invalid filter value: '" + f + "'. Valid filters are: NONE, GRAYSCALE, SEPIA, INVERT, BLUR, SHARPEN, VINTAGE");
+                    }
+                }
+            }
             if (imageFormat != null || targetWidth != null || targetHeight != null || !imageFilters.isEmpty()) {
                 ImageProcessingOptions options = ImageProcessingOptions.builder()
                         .imageFormat(imageFormat)
