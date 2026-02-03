@@ -34,3 +34,6 @@ build/
 
 ### Uploads from local storage ###
 /uploads/
+
+### Environment files with secrets ###
+.env
