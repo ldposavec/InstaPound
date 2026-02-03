@@ -26,8 +26,8 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     private final CustomUserDetailsServiceImpl userDetailsService;
 
-    @Autowired
-    private CustomOAuth2UserServiceImpl oAuth2UserService;
+//    @Autowired
+    private final CustomOAuth2UserServiceImpl oAuth2UserService;
 
     @Bean
     @Primary
@@ -40,26 +40,27 @@ public class SecurityConfig {
                                 "/error", "/login/**", "/oauth2/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/photos/upload/**", "/api/photos/edit/**", "/api/user/package/**")
-                            .hasAnyRole("REGISTERED", "ADMIN")
+//                            .hasAnyRole("REGISTERED", "ADMIN")
+                            .permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(form -> form
                         .loginProcessingUrl("/api/auth/login")
 //                                .loginProcessingUrl("/authorization-code/callback")
                         .defaultSuccessUrl("/api/user/profile")
                         .permitAll()
-//                ).oauth2Login(oauth2 -> oauth2
-//                        .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
-//                        .defaultSuccessUrl("/api/user/profile")
+                ).oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
+                        .defaultSuccessUrl("/api/user/profile", true)
                 ).logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
                         .logoutSuccessUrl("/")
                         .permitAll()
                 ).headers(headers ->
                         headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
-        if (oAuth2UserService != null) http.oauth2Login(oauth2 -> oauth2
-                .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
-                .defaultSuccessUrl("/api/user/profile")
-        );
+//        if (oAuth2UserService != null) http.oauth2Login(oauth2 -> oauth2
+//                .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
+//                .defaultSuccessUrl("/api/user/profile")
+//        );
         return http.build();
     }
 

@@ -1,6 +1,7 @@
 package hr.algebra.nrako.instapound.controller;
 
 import hr.algebra.nrako.instapound.enums.ActionType;
+import hr.algebra.nrako.instapound.enums.AuthProvider;
 import hr.algebra.nrako.instapound.enums.UserRole;
 import hr.algebra.nrako.instapound.model.dto.request.UserRegistrationRequest;
 import hr.algebra.nrako.instapound.model.dto.response.UserResponse;
@@ -43,6 +44,7 @@ public class AuthController {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(UserRole.REGISTERED)
                 .packageType(request.getPackageType())
+                .authProvider(AuthProvider.LOCAL)
                 .createdAt(LocalDateTime.now())
                 .build();
         userRepository.save(user);

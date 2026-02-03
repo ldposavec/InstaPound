@@ -23,7 +23,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@ConditionalOnProperty(name = "spring.security.oauth2.client.registration.okta.client-id")
+//@ConditionalOnProperty(name = "spring.security.oauth2.client.registration.okta.client-id")
 public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
     private final UserRepository userRepository;
 
