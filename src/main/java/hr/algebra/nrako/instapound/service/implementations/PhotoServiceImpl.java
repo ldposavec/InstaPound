@@ -1,25 +1,25 @@
 package hr.algebra.nrako.instapound.service.implementations;
 
-import hr.algebra.nrako.instapound.model.dto.PhotoResponse;
-import hr.algebra.nrako.instapound.model.dto.PhotoSearchRequest;
-import hr.algebra.nrako.instapound.model.entity.ActionLog;
+import hr.algebra.nrako.instapound.model.dto.response.PhotoResponse;
+import hr.algebra.nrako.instapound.model.dto.request.PhotoSearchRequest;
 import hr.algebra.nrako.instapound.model.entity.Hashtag;
 import hr.algebra.nrako.instapound.model.entity.Photo;
 import hr.algebra.nrako.instapound.model.entity.User;
-import hr.algebra.nrako.instapound.repository.ActionLogRepository;
+import hr.algebra.nrako.instapound.model.mappers.PhotoMapper;
 import hr.algebra.nrako.instapound.repository.HashtagRepository;
 import hr.algebra.nrako.instapound.repository.PhotoRepository;
 import hr.algebra.nrako.instapound.repository.UserRepository;
 import hr.algebra.nrako.instapound.service.interfaces.PhotoService;
+import hr.algebra.nrako.instapound.specification.PhotoSpecification;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,28 +28,31 @@ public class PhotoServiceImpl implements PhotoService {
     private PhotoRepository photoRepository;
     private UserRepository userRepository;
     private HashtagRepository hashtagRepository;
+    private PhotoMapper photoMapper;
 
     @Override
     public List<PhotoResponse> getAll() {
         return photoRepository.findAll()
                 .stream()
-                .map(this::toDto)
+                .map(photoMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Optional<PhotoResponse> getById(Long id) {
         Optional<Photo> photo = photoRepository.findById(id);
-        return photo.map(this::toDto);
+        return photo.map(photoMapper::toDto);
     }
 
     @Override
+    @Transactional
     public PhotoResponse save(PhotoResponse photoResponse) throws ParseException {
         Photo photo = photoRepository.save(toEntity(photoResponse));
-        return toDto(photo);
+        return photoMapper.toDto(photo);
     }
 
     @Override
+    @Transactional
     public Optional<PhotoResponse> update(PhotoResponse photoResponse) throws ParseException {
         Optional<Photo> existingPhotoOpt = photoRepository.findById(photoResponse.getId());
         if (existingPhotoOpt.isEmpty()) {
@@ -58,16 +61,18 @@ public class PhotoServiceImpl implements PhotoService {
         Photo photo = existingPhotoOpt.get();
 
         Set<Hashtag> hashtags = new HashSet<>();
-        for (String tag : photoResponse.getHashtags()) {
-            Hashtag hashtag = hashtagRepository.findByTag(tag);
-            if (hashtag == null) {
-                Hashtag newTag = Hashtag.builder()
-                        .withTag(tag)
-                        .build();
-                hashtagRepository.save(newTag);
+        if (photoResponse.getHashtags() != null) {
+            for (String tag : photoResponse.getHashtags()) {
+                Hashtag hashtag = hashtagRepository.findByTag(tag);
+                if (hashtag == null) {
+                    Hashtag newTag = Hashtag.builder()
+                            .withTag(tag)
+                            .build();
+                    hashtagRepository.save(newTag);
+                }
+                hashtag.incrementUsage();
+                hashtags.add(hashtag);
             }
-            hashtag.incrementUsage();
-            hashtags.add(hashtag);
         }
 
         photo.setDescription(photoResponse.getDescription());
@@ -75,46 +80,69 @@ public class PhotoServiceImpl implements PhotoService {
         photo.setEditedAt(LocalDateTime.now());
 
         Photo updatedPhoto = photoRepository.save(photo);
-        return Optional.of(toDto(updatedPhoto));
+        return Optional.of(photoMapper.toDto(updatedPhoto));
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
-
+        Optional<Photo> photo = photoRepository.findById(id);
+        photo.ifPresent(value -> photoRepository.delete(value));
     }
 
     @Override
-    public List<PhotoResponse> filterByUser(String username) {
-        return List.of();
+    public Page<PhotoResponse> filterByUser(String username, Pageable pageable) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) return Page.empty(pageable);
+
+        return photoRepository.findByUserOrderByUploadedAtDesc(user, pageable).map(photoMapper::toDto);
+//        Pageable pageable = PageRequest.of(0, 90, Sort.by(Sort.Direction.DESC, "uploadedAt"));
+//        return photoRepository.findByUserOrderByUploadedAtDesc(user, pageable)
+//                .getContent()
+//                .stream()
+//                .map(photoMapper::toDto)
+//                .collect(Collectors.toList());
     }
 
     @Override
-    public List<PhotoResponse> filterByParams(PhotoSearchRequest searchRequest) {
-        return List.of();
+    public Page<PhotoResponse> filterByParams(PhotoSearchRequest searchRequest, Pageable pageable) {
+        Specification<Photo> masterSpecification = Specification.unrestricted();
+
+        if (searchRequest != null) {
+            masterSpecification = masterSpecification.and(PhotoSpecification.fromSearchRequest(searchRequest));
+        }
+
+//        Page<PhotoResponse> photos = photoRepository.findAll(masterSpecification, pageable)
+        return photoRepository.findAll(masterSpecification, pageable)
+//                .stream()
+                .map(photoMapper::toDto);
+//                .collect(Collectors.toList());
+
+//        return new PageImpl<>(photos, pageable, photos.size());
     }
 
-    private PhotoResponse toDto(Photo photo) {
-        return PhotoResponse.builder()
-                .id(photo.getId())
-                .originalFileName(photo.getOriginalFileName())
-                .description(photo.getDescription())
-                .hashtags(photo.getHashtags().stream()
-                        .map(Hashtag::getTag)
-                        .collect(Collectors.toSet()))
-                .thumbnailUrl(photo.getThumbnailUrl())
-                .imageUrl(photo.getStorageUrl())
-                .processedUrl(photo.getProcessedUrl())
-                .author(photo.getUser().getUsername())
-                .authorId(photo.getUser().getId())
-                .fileSizeBytes(photo.getFileSizeBytes())
-                .width(photo.getWidth())
-                .height(photo.getHeight())
-                .uploadedAt(photo.getUploadedAt())
-                .editedAt(photo.getEditedAt())
-                .downloadCount(photo.getDownloadCount())
-                .viewCount(photo.getViewCount())
-                .build();
-    }
+//    private PhotoResponse toDto(Photo photo) {
+//        return PhotoResponse.builder()
+//                .id(photo.getId())
+//                .originalFileName(photo.getOriginalFileName())
+//                .description(photo.getDescription())
+//                .hashtags(photo.getHashtags().stream()
+//                        .map(Hashtag::getTag)
+//                        .collect(Collectors.toSet()))
+//                .thumbnailUrl(photo.getThumbnailUrl())
+//                .imageUrl(photo.getStorageUrl())
+//                .processedUrl(photo.getProcessedUrl())
+//                .author(photo.getUser().getUsername())
+//                .authorId(photo.getUser().getId())
+//                .fileSizeBytes(photo.getFileSizeBytes())
+//                .width(photo.getWidth())
+//                .height(photo.getHeight())
+//                .uploadedAt(photo.getUploadedAt())
+//                .editedAt(photo.getEditedAt())
+//                .downloadCount(photo.getDownloadCount())
+//                .viewCount(photo.getViewCount())
+//                .build();
+//    }
 
     private Photo toEntity(PhotoResponse response) throws ParseException {
         Set<Hashtag> hashtags = response.getHashtags() == null ? new HashSet<>()

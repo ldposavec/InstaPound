@@ -1,12 +1,13 @@
 package hr.algebra.nrako.instapound.service.interfaces;
 
-import hr.algebra.nrako.instapound.model.entity.User;
+import hr.algebra.nrako.instapound.model.dto.response.UserResponse;
 
 import java.util.Optional;
 
 public interface UserService {
-    Optional<User> getById(Long id);
-    Optional<User> getByEmail(String email);
-    Optional<User> getByUsername(String username);
-    User save(User user);
+    Optional<UserResponse> getById(Long id);
+    Optional<UserResponse> getByEmail(String email);
+    Optional<UserResponse> getByUsername(String username);
+    UserResponse save(UserResponse user);
+//    Optional<UserResponse> update(UserResponse user);
 }

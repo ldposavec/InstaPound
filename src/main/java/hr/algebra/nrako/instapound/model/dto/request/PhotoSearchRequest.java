@@ -1,4 +1,4 @@
-package hr.algebra.nrako.instapound.model.dto;
+package hr.algebra.nrako.instapound.model.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

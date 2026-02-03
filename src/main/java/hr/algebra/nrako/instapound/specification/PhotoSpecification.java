@@ -1,6 +1,6 @@
 package hr.algebra.nrako.instapound.specification;
 
-import hr.algebra.nrako.instapound.model.dto.PhotoSearchRequest;
+import hr.algebra.nrako.instapound.model.dto.request.PhotoSearchRequest;
 import hr.algebra.nrako.instapound.model.entity.Photo;
 import hr.algebra.nrako.instapound.model.entity.User;
 import jakarta.persistence.criteria.Join;

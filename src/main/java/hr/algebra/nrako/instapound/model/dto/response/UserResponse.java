@@ -1,4 +1,4 @@
-package hr.algebra.nrako.instapound.model.dto;
+package hr.algebra.nrako.instapound.model.dto.response;
 
 import hr.algebra.nrako.instapound.enums.PackageType;
 import hr.algebra.nrako.instapound.enums.UserRole;
