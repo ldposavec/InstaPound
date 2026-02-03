@@ -327,7 +327,7 @@ public class PhotoController {
                         "Downloaded photo: " + id + (original ? " (original)" : " (processed)"),
                         ipUtils.getClientIp(request), id);
             } else {
-                actionLogService.logAnonymousAction(ActionType.PHOTO_UPLOAD, "Downloaded photo: " + id,
+                actionLogService.logAnonymousAction(ActionType.PHOTO_DOWNLOAD, "Downloaded photo: " + id,
                         ipUtils.getClientIp(request));
             }
 

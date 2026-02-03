@@ -49,7 +49,7 @@ public class UserPackageServiceImpl implements UserPackageService {
                 .description(userPackage != null ? userPackage.getDescription() : null)
                 .limits(userPackage != null ? userPackage.getLimits() : null)
                 .currentUsage(user.getPackageUsage())
-                .pendingPackageType(user.getPackageType())
+                .pendingPackageType(user.getPendingPackageType())
                 .canChangeToday(canChangePackage(user))
                 .build();
     }
@@ -92,7 +92,7 @@ public class UserPackageServiceImpl implements UserPackageService {
         List<User> usersWithPendingChanges = userRepository.findUsersWithPendingPackageChanges();
 
         for (User user : usersWithPendingChanges) {
-            if (user.getLastPackageChangeDate() != null && LocalDate.now().equals(user.getLastPackageChangeDate())) {
+            if (user.getLastPackageChangeDate() != null && !LocalDate.now().isBefore(user.getPackageChangeEffectiveDate())) {
                 PackageType oldPackage = user.getPackageType();
                 user.setPackageType(user.getPendingPackageType());
                 user.setPendingPackageType(null);

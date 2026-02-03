@@ -12,4 +12,13 @@ public class StorageConfig {
     private StorageType type = StorageType.LOCAL;
     private String localPath = "./uploads";
     private String thumbnailPath = "./uploads/thumbnails";
+    private CloudinaryConfig cloudinary;
+
+    @Data
+    public static class CloudinaryConfig {
+        private String cloudName;
+        private String apiKey;
+        private String apiSecret;
+        private String folder = "instapound";
+    }
 }
