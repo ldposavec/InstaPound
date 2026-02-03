@@ -100,14 +100,13 @@ public class PhotoController {
 
             byte[] imageData = file.getBytes();
             Set<ImageFilter> imageFilters = new HashSet<>();
-            if (filters != null) {
-                for (String f : filters) {
-                    try {
-                        imageFilters.add(ImageFilter.valueOf(f.toUpperCase()));
-                    } catch (IllegalArgumentException e) {
-                        return ResponseEntity.badRequest()
-                                .body("Invalid filter value: '" + f + "'. Valid filters are: NONE, GRAYSCALE, SEPIA, INVERT, BLUR, SHARPEN, VINTAGE");
-                    }
+            Set<String> parsedFilters = parseCommaSeparatedValues(filters);
+            for (String filterValue : parsedFilters) {
+                try {
+                    imageFilters.add(ImageFilter.valueOf(filterValue.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest()
+                            .body("Invalid filter value: '" + filterValue + "'. Valid filters are: NONE, GRAYSCALE, SEPIA, INVERT, BLUR, SHARPEN, VINTAGE");
                 }
             }
             if (imageFormat != null || targetWidth != null || targetHeight != null || !imageFilters.isEmpty()) {
@@ -137,17 +136,16 @@ public class PhotoController {
             int[] dimensions = imageProcessorService.getImageDimensions(imageData);
 
             Set<Hashtag> photoHashtags = new HashSet<>();
-            if (hashtags != null) {
-                for (String tag : hashtags) {
-                    String normalizedTag = tag.toLowerCase().trim();
-                    Hashtag hashtag = hashtagRepository.findByTag(normalizedTag);
-                    if (hashtag == null) {
-                        hashtag = Hashtag.builder().withTag(normalizedTag).build();
-                        hashtagRepository.save(hashtag);
-                    }
-                    hashtag.incrementUsage();
-                    photoHashtags.add(hashtag);
+            Set<String> parsedHashtags = parseCommaSeparatedValues(hashtags);
+            for (String tagValue : parsedHashtags) {
+                String normalizedTag = tagValue.toLowerCase();
+                Hashtag hashtag = hashtagRepository.findByTag(normalizedTag);
+                if (hashtag == null) {
+                    hashtag = Hashtag.builder().withTag(normalizedTag).build();
+                    hashtagRepository.save(hashtag);
                 }
+                hashtag.incrementUsage();
+                photoHashtags.add(hashtag);
             }
 
             Photo photo = Photo.builder()
@@ -397,4 +395,26 @@ public class PhotoController {
 //                .viewCount(photo.getViewCount())
 //                .build();
 //    }
+
+    /**
+     * Parses comma-separated values from a set of strings.
+     * Supports both multiple form fields and comma-separated values within a single field.
+     * @param values Set of values that may contain comma-separated items
+     * @return Set of individual trimmed values
+     */
+    private Set<String> parseCommaSeparatedValues(Set<String> values) {
+        Set<String> result = new HashSet<>();
+        if (values != null) {
+            for (String value : values) {
+                String[] parts = value.split(",");
+                for (String part : parts) {
+                    String trimmed = part.trim();
+                    if (!trimmed.isEmpty()) {
+                        result.add(trimmed);
+                    }
+                }
+            }
+        }
+        return result;
+    }
 }
