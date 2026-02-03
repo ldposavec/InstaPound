@@ -8,7 +8,8 @@
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { packageStore } from '$lib/stores/packages.svelte';
 	import { authStore } from '$lib/stores/auth.svelte';
-	import { loadStripe } from '@stripe/stripe-js';
+	// Note: Stripe integration - uncomment when implementing real payment
+	// import { loadStripe } from '@stripe/stripe-js';
 	import type { PackageType } from '$lib/types';
 
 	let loading = $state(true);
@@ -19,8 +20,8 @@
 	let changeSuccess = $state('');
 	let showStripeModal = $state(false);
 
-	// Stripe public key - replace with your actual key
-	const STRIPE_PUBLIC_KEY = 'pk_test_placeholder';
+	// Stripe public key - should be configured via environment variables
+	const STRIPE_PUBLIC_KEY = import.meta.env.VITE_STRIPE_PUBLIC_KEY || '';
 
 	const packages = [
 		{
@@ -31,7 +32,8 @@
 			period: '/forever',
 			description: 'Perfect for beginners',
 			icon: Sparkles,
-			color: 'slate',
+			iconBg: 'bg-slate-100 dark:bg-slate-800',
+			iconColor: 'text-slate-600 dark:text-slate-400',
 			features: [
 				{ text: '5 uploads per day', included: true },
 				{ text: '10MB max file size', included: true },
@@ -49,7 +51,8 @@
 			period: '/month',
 			description: 'For serious photographers',
 			icon: Crown,
-			color: 'violet',
+			iconBg: 'bg-violet-100 dark:bg-violet-900/50',
+			iconColor: 'text-violet-600 dark:text-violet-400',
 			popular: true,
 			features: [
 				{ text: '25 uploads per day', included: true },
@@ -68,7 +71,8 @@
 			period: '/month',
 			description: 'Unlimited creative freedom',
 			icon: Star,
-			color: 'amber',
+			iconBg: 'bg-amber-100 dark:bg-amber-900/50',
+			iconColor: 'text-amber-600 dark:text-amber-400',
 			features: [
 				{ text: 'Unlimited uploads', included: true },
 				{ text: '50MB max file size', included: true },
@@ -243,7 +247,7 @@
 				{#each packages as pkg}
 					{@const isCurrentPlan = authStore.user?.packageType === pkg.type}
 					{@const isPending = authStore.user?.pendingPackageType === pkg.type}
-					{@const colors = getColorClasses(pkg.color, isCurrentPlan)}
+					{@const colors = getColorClasses(pkg.type === 'FREE' ? 'slate' : pkg.type === 'PRO' ? 'violet' : 'amber', isCurrentPlan)}
 					<div class="relative">
 						{#if pkg.popular}
 							<div class="absolute -top-4 left-1/2 z-10 -translate-x-1/2">
@@ -259,10 +263,10 @@
 						>
 							<div class="p-8">
 								<div class="mb-4 flex items-center gap-3">
-									<div class="rounded-xl bg-{pkg.color}-100 dark:bg-{pkg.color}-900/50 p-3">
+									<div class="rounded-xl p-3 {pkg.iconBg}">
 										<svelte:component
 											this={pkg.icon}
-											class="h-6 w-6 text-{pkg.color}-600 dark:text-{pkg.color}-400"
+											class="h-6 w-6 {pkg.iconColor}"
 										/>
 									</div>
 									<div>
