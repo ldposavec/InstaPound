@@ -157,6 +157,7 @@ export const photosApi = {
             format?: ImageFormat;
             width?: number;
             height?: number;
+            filters?: ImageFilter[];
         }
     ): Promise<Photo> {
         const formData = new FormData();
@@ -169,6 +170,9 @@ export const photosApi = {
         if (options.format) formData.append('format', options.format);
         if (options.width) formData.append('width', options.width.toString());
         if (options.height) formData.append('height', options.height.toString());
+        if (options.filters && options.filters.length > 0) {
+            options.filters.forEach((f) => formData.append('filters', f));
+        }
         const response = await fetch(`${API_BASE}/photos/upload`, {
             method: 'POST',
             body: formData,

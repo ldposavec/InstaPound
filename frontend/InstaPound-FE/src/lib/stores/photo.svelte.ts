@@ -70,6 +70,7 @@ function createPhotosStore() {
         format?: ImageFormat;
         width?: number;
         height?: number;
+        filters?: ImageFilter[];
     }) : Promise<Photo> {
         loading = true;
         error = null;

@@ -77,6 +77,7 @@ public class PhotoController {
             @RequestParam(value = "format", required = false) ImageFormat imageFormat,
             @RequestParam(value = "width", required = false) Integer targetWidth,
             @RequestParam(value = "height", required = false) Integer targetHeight,
+            @RequestParam(value = "filters", required = false) Set<String> filters,
 //            @AuthenticationPrincipal UserDetails userDetails,
             HttpServletRequest request) {
         try {
@@ -98,11 +99,15 @@ public class PhotoController {
             String storedFilename = UUID.randomUUID().toString() + extension;
 
             byte[] imageData = file.getBytes();
-            if (imageFormat != null || targetWidth != null || targetHeight != null) {
+            Set<ImageFilter> imageFilters = filters != null
+                    ? filters.stream().map(f -> ImageFilter.valueOf(f.toUpperCase())).collect(Collectors.toSet())
+                    : new HashSet<>();
+            if (imageFormat != null || targetWidth != null || targetHeight != null || !imageFilters.isEmpty()) {
                 ImageProcessingOptions options = ImageProcessingOptions.builder()
                         .imageFormat(imageFormat)
                         .width(targetWidth)
                         .height(targetHeight)
+                        .filters(imageFilters)
                         .build();
                 imageData = imageProcessorService.processImage(new ByteArrayInputStream(file.getBytes()), options);
 

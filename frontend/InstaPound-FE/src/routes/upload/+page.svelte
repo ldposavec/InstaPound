@@ -11,7 +11,7 @@
     import { authStore } from '$lib/stores/auth.svelte';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    import type { ImageFormat, StorageType } from '$lib/types';
+    import type { ImageFormat, ImageFilter, StorageType } from '$lib/types';
 
     let file = $state<File | null>(null);
     let preview = $state<string | null>(null);
@@ -22,6 +22,7 @@
     let width = $state<number | ''>('');
     let height = $state<number | ''>('');
     let storageType = $state<StorageType>('LOCAL');
+    let selectedFilters = $state<ImageFilter[]>([]);
     let loading = $state(false);
     let error = $state('');
     let success = $state(false);
@@ -38,6 +39,23 @@
         { value: 'LOCAL', label: 'Local Storage' },
         { value: 'CLOUDINARY', label: 'Cloud Storage (Cloudinary)' }
     ];
+
+    const filterOptions: { value: ImageFilter; label: string }[] = [
+        { value: 'GRAYSCALE', label: 'Grayscale' },
+        { value: 'SEPIA', label: 'Sepia' },
+        { value: 'INVERT', label: 'Invert' },
+        { value: 'BLUR', label: 'Blur' },
+        { value: 'SHARPEN', label: 'Sharpen' },
+        { value: 'VINTAGE', label: 'Vintage' }
+    ];
+
+    function toggleFilter(filter: ImageFilter) {
+        if (selectedFilters.includes(filter)) {
+            selectedFilters = selectedFilters.filter(f => f !== filter);
+        } else {
+            selectedFilters = [...selectedFilters, filter];
+        }
+    }
 
     onMount(() => {
         if (!authStore.isAuthenticated) {
@@ -123,7 +141,8 @@
                 storageType,
                 format: format || undefined,
                 width: width || undefined,
-                height: height || undefined
+                height: height || undefined,
+                filters: selectedFilters.length > 0 ? selectedFilters : undefined
             });
             success = true;
             setTimeout(() => {
@@ -261,6 +280,30 @@
                                     placeholder="Auto"
                                     bind:value={height}
                             />
+                        </div>
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Image Filters
+                            </label>
+                            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                {#each filterOptions as option}
+                                    <button
+                                            type="button"
+                                            onclick={() => toggleFilter(option.value)}
+                                            class="rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors
+                                                {selectedFilters.includes(option.value)
+                                                    ? 'border-violet-500 bg-violet-50 text-violet-700 dark:border-violet-400 dark:bg-violet-950/50 dark:text-violet-300'
+                                                    : 'border-slate-200 bg-white text-slate-700 hover:border-violet-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-violet-600'}"
+                                    >
+                                        {option.label}
+                                    </button>
+                                {/each}
+                            </div>
+                            {#if selectedFilters.length > 0}
+                                <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                    Selected: {selectedFilters.join(', ')}
+                                </p>
+                            {/if}
                         </div>
                         <Select
                                 bind:value={storageType}
