@@ -19,6 +19,7 @@ import hr.algebra.nrako.instapound.service.interfaces.ActionLogService;
 import hr.algebra.nrako.instapound.service.interfaces.UserPackageService;
 import hr.algebra.nrako.instapound.service.storage.StorageServiceImpl;
 import hr.algebra.nrako.instapound.specification.PhotoSpecification;
+import hr.algebra.nrako.instapound.utils.AuthUtils;
 import hr.algebra.nrako.instapound.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
@@ -35,8 +36,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -66,6 +66,7 @@ public class PhotoController {
     private final UserPackageService userPackageService;
     private final PhotoMapper photoMapper;
     private final IpUtils ipUtils;
+    private final AuthUtils authUtils;
 
     @PostMapping("/upload")
     @PreAuthorize("hasAnyRole('REGISTERED', 'ADMIN')")
@@ -77,10 +78,10 @@ public class PhotoController {
             @RequestParam(value = "format", required = false) ImageFormat imageFormat,
             @RequestParam(value = "width", required = false) Integer targetWidth,
             @RequestParam(value = "height", required = false) Integer targetHeight,
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             HttpServletRequest request) {
         try {
-            User user = userRepository.findByUsername(userDetails.getUsername());
+            User user = authUtils.getUserFromAuthentication(authentication);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
             }
@@ -210,10 +211,10 @@ public class PhotoController {
     public ResponseEntity<?> editPhoto(
             @PathVariable Long id,
             @RequestBody PhotoEditRequest editRequest,
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             HttpServletRequest request
             ) {
-        User user = userRepository.findByUsername(userDetails.getUsername());
+        User user = authUtils.getUserFromAuthentication(authentication);
         if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
 
         Optional<Photo> photoOpt = photoRepository.findById(id);
@@ -253,9 +254,9 @@ public class PhotoController {
     @PreAuthorize("hasAnyRole('REGISTERED', 'ADMIN')")
     public ResponseEntity<?> deletePhoto(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             HttpServletRequest request) {
-        User user = userRepository.findByUsername(userDetails.getUsername());
+        User user = authUtils.getUserFromAuthentication(authentication);
         if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
         Optional<Photo> photoOpt = photoRepository.findById(id);
         if (photoOpt.isEmpty()) return ResponseEntity.notFound().build();
@@ -294,7 +295,7 @@ public class PhotoController {
             @RequestParam(required = false) Integer width,
             @RequestParam(required = false) Integer height,
             @RequestParam(required = false) Set<String> filters,
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             HttpServletRequest request
             ) {
         Optional<Photo> photoOpt = photoRepository.findById(id);
@@ -321,7 +322,7 @@ public class PhotoController {
             photo.incrementDownloadCount();
             photoRepository.save(photo);
 
-            User user = userDetails != null ? userRepository.findByUsername(userDetails.getUsername()) : null;
+            User user = authUtils.getUserFromAuthentication(authentication);
             if (user != null) {
                 actionLogService.logActionWithTargetPhoto(user, ActionType.PHOTO_DOWNLOAD,
                         "Downloaded photo: " + id + (original ? " (original)" : " (processed)"),

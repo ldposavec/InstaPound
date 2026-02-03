@@ -10,6 +10,7 @@ import hr.algebra.nrako.instapound.repository.UserRepository;
 import hr.algebra.nrako.instapound.service.interfaces.ActionLogService;
 import hr.algebra.nrako.instapound.service.interfaces.UserPackageService;
 import hr.algebra.nrako.instapound.service.interfaces.UserService;
+import hr.algebra.nrako.instapound.utils.AuthUtils;
 import hr.algebra.nrako.instapound.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
@@ -17,12 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -35,11 +34,12 @@ public class UserController {
     private final ActionLogService actionLogService;
     private final UserMapper userMapper;
     private final IpUtils ipUtils;
+    private final AuthUtils authUtils;
 
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UserResponse> getCurrentUserProfile(@AuthenticationPrincipal UserDetails userDetails) {
-        User user = userRepository.findByUsername(userDetails.getUsername());
+    public ResponseEntity<UserResponse> getCurrentUserProfile(Authentication authentication) {
+        User user = authUtils.getUserFromAuthentication(authentication);
         if (user == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(userMapper.toDto(user));
     }
@@ -54,8 +54,8 @@ public class UserController {
 
     @GetMapping("/package")
     @PreAuthorize("hasAnyRole('REGISTERED', 'ADMIN')")
-    public ResponseEntity<PackageInfoResponse> getCurrentPackage(@AuthenticationPrincipal UserDetails userDetails) {
-        User user = userRepository.findByUsername(userDetails.getUsername());
+    public ResponseEntity<PackageInfoResponse> getCurrentPackage(Authentication authentication) {
+        User user = authUtils.getUserFromAuthentication(authentication);
         if (user == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(userPackageService.getPackageInfoForUser(user));
     }
@@ -69,10 +69,10 @@ public class UserController {
     @PreAuthorize("hasAnyRole('REGISTERED', 'ADMIN')")
     public ResponseEntity<?> requestPackageChange(
             @RequestBody PackageChangeRequest request,
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             HttpServletRequest httpRequest
             ) {
-        User user = userRepository.findByUsername(userDetails.getUsername());
+        User user = authUtils.getUserFromAuthentication(authentication);
         if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
         if (!userPackageService.canChangePackage(user)) {
             return ResponseEntity.badRequest().body("You can only change your package once per day. Please try again tomorrow.");
@@ -87,8 +87,8 @@ public class UserController {
 
     @DeleteMapping("/package/change")
     @PreAuthorize("hasAnyRole('REGISTERED', 'ADMIN')")
-    public ResponseEntity<?> cancelPackageChange(@AuthenticationPrincipal UserDetails userDetails, HttpServletRequest request) {
-        User user = userRepository.findByUsername(userDetails.getUsername());
+    public ResponseEntity<?> cancelPackageChange(Authentication authentication, HttpServletRequest request) {
+        User user = authUtils.getUserFromAuthentication(authentication);
         if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
         if (user.getPendingPackageType() == null) {
             return ResponseEntity.badRequest().body("No pending package change to cancel.");
