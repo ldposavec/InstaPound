@@ -206,8 +206,8 @@
                                     placeholder="Auto"
                             />
                         </div>
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Filters</label>
+                        <fieldset>
+                            <legend class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Filters</legend>
                             <div class="flex flex-wrap gap-2">
                                 {#each filterOptions as filter}
                                     <button
@@ -221,7 +221,7 @@
                                     </button>
                                 {/each}
                             </div>
-                        </div>
+                        </fieldset>
                     </div>
                 {/if}
             </div>

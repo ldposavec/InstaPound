@@ -274,7 +274,7 @@
                                     <td class="px-6 py-4">
                                         <div class="flex justify-end gap-2">
                                             <button
-                                                    onclick={() => goto(`/admin/users/${user.id}`)}
+                                                    onclick={() => goto(`/user/${user.id}`)}
                                                     class="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
                                                     title="View details"
                                             >

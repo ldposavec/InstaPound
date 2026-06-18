@@ -1,6 +1,5 @@
 import type {
     Photo,
-    Page,
     PhotoSearchRequest,
     ImageFormat,
     ImageFilter,
@@ -54,7 +53,7 @@ function createPhotosStore() {
         loading = true;
         error = null;
         try {
-            const result = await photosApi.getById(id);
+            currentPhoto = await photosApi.getById(id);
         } catch (e) {
             error = e instanceof ApiError ? e.message : 'Failed to get photo';
             currentPhoto = null;
@@ -74,8 +73,7 @@ function createPhotosStore() {
         loading = true;
         error = null;
         try {
-            const photo = await photosApi.upload(file, options);
-            return photo;
+            return await photosApi.upload(file, options);
         } catch (e) {
             error = e instanceof ApiError ? e.message : 'Failed to upload photo';
             throw e;
@@ -187,8 +185,7 @@ function createPhotosStore() {
         upload,
         edit,
         deletePhoto,
-        download,
-        clear
+        download
     };
 }
 

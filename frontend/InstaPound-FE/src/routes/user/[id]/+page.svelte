@@ -19,7 +19,7 @@
     let selectedPhoto = $state<Photo | null>(null);
 
     onMount(async () => {
-        const id = parseInt(page.params.id);
+        const id = parseInt(page.params.id ?? '');
         if (isNaN(id)) {
             error = 'Invalid user ID';
             loading = false;
@@ -53,7 +53,7 @@
     });
 
     async function loadPhotos(pageNum: number) {
-        const id = parseInt(page.params.id);
+        const id = parseInt(page.params.id ?? '');
         if (isNaN(id)) return;
         try {
             photosData = await photosApi.getByUser(id, pageNum, 12);

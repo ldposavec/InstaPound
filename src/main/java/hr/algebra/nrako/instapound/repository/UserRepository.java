@@ -6,17 +6,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findById(Long id);
     User findByUsername(String username);
     User findByEmail(String email);
-    List<User> findAll();
     Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
 
-    @Query("SELECT u FROM User u WHERE u.packageChangeEffectiveDate = CURRENT_DATE")
+    @Query("SELECT u FROM User u WHERE u.packageChangeEffectiveDate = CURRENT_DATE AND u.pendingPackageType IS NOT NULL")
     List<User> findUsersWithPendingPackageChanges();
 }

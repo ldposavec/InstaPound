@@ -31,21 +31,23 @@
 
             <div class="hidden items-center gap-1 md:flex">
                 {#each navLinks as link}
+                    {@const Icon = link.icon}
                     <a
                             href={link.href}
                             class="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                     >
-                        <svelte:component this={link.icon} class="h-4 w-4" />
+                        <Icon class="h-4 w-4" />
                         {link.label}
                     </a>
                 {/each}
                 {#if authStore.isAuthenticated}
                     {#each authLinks as link}
+                        {@const Icon = link.icon}
                         <a
                                 href={link.href}
                                 class="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                         >
-                            <svelte:component this={link.icon} class="h-4 w-4" />
+                            <Icon class="h-4 w-4" />
                             {link.label}
                         </a>
                     {/each}
@@ -78,7 +80,7 @@
                                 class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                         >
                             <div class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 text-xs font-semibold text-white">
-                                {authStore.user.username}
+                                {authStore.user.username.charAt(0).toUpperCase()}
                             </div>
                             {authStore.user.username}
                         </a>
@@ -116,23 +118,25 @@
         <div class="border-t border-slate-200 bg-white md:hidden dark:border-slate-800 dark:bg-slate-950">
             <div class="space-y-1 px-4 py-3">
                 {#each navLinks as link}
+                    {@const Icon = link.icon}
                     <a
                             href={link.href}
                             onclick={() => (mobileMenuOpen = false)}
                             class="flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                     >
-                        <svelte:component this={link.icon} class="h-5 w-5" />
+                        <Icon class="h-5 w-5" />
                         {link.label}
                     </a>
                 {/each}
                 {#if authStore.isAuthenticated}
                     {#each authLinks as link}
+                        {@const Icon = link.icon}
                         <a
                                 href={link.href}
                                 onclick={() => (mobileMenuOpen = false)}
                                 class="flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                         >
-                            <svelte:component this={link.icon} class="h-5 w-5" />
+                            <Icon class="h-5 w-5" />
                             {link.label}
                         </a>
                     {/each}

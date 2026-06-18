@@ -4,18 +4,22 @@ import hr.algebra.nrako.instapound.enums.ActionType;
 import hr.algebra.nrako.instapound.enums.AuthProvider;
 import hr.algebra.nrako.instapound.enums.UserRole;
 import hr.algebra.nrako.instapound.model.dto.request.UserRegistrationRequest;
-import hr.algebra.nrako.instapound.model.dto.response.UserResponse;
-import hr.algebra.nrako.instapound.model.entity.User;
+import hr.algebra.nrako.instapound.model.dto.request.LoginRequest;
+import hr.algebra.nrako.instapound.model.dto.response.TokenPairResponse;
 import hr.algebra.nrako.instapound.model.mappers.UserMapper;
 import hr.algebra.nrako.instapound.repository.UserRepository;
-import hr.algebra.nrako.instapound.service.implementations.UserServiceImpl;
+import hr.algebra.nrako.instapound.model.entity.User;
 import hr.algebra.nrako.instapound.service.interfaces.ActionLogService;
+import hr.algebra.nrako.instapound.service.interfaces.TokenService;
+import hr.algebra.nrako.instapound.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,10 +30,39 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
+    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ActionLogService actionLogService;
+    private final TokenService tokenService;
     private final UserMapper userMapper;
+    private final IpUtils ipUtils;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
+                                   HttpServletRequest httpRequest) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
+
+            User user = userRepository.findByUsername(request.getUsername());
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+            }
+
+            user.setLastLoginAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            actionLogService.logAction(user, ActionType.USER_LOGIN,
+                    "User logged in", ipUtils.getClientIp(httpRequest));
+            TokenPairResponse tokens = tokenService.issueTokenPair(user);
+            return ResponseEntity.ok(tokens);
+        } catch (Exception e) {
+            log.warn("Login failed for username {}", request.getUsername());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        }
+    }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody UserRegistrationRequest request,
@@ -50,8 +83,8 @@ public class AuthController {
         userRepository.save(user);
 
         actionLogService.logAction(user, ActionType.USER_REGISTER,
-                "User registered with package: " + request.getPackageType(), getCientIp(httpRequest));
-        log.info("New user registered: {}",  user.getUsername());
+                "User registered with package: " + request.getPackageType(), ipUtils.getClientIp(httpRequest));
+        log.info("New user registered: {}", user.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toDto(user));
     }
 
@@ -81,11 +114,11 @@ public class AuthController {
 //                .build();
 //    }
 
-    private String getCientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) return xForwardedFor.split(",")[0].trim();
-        return request.getRemoteAddr();
-    }
+//    private String getCientIp(HttpServletRequest request) {
+//        String xForwardedFor = request.getHeader("X-Forwarded-For");
+//        if (xForwardedFor != null && !xForwardedFor.isEmpty()) return xForwardedFor.split(",")[0].trim();
+//        return request.getRemoteAddr();
+//    }
 
     private record UsernameCheckResponse(boolean available) {}
     private record EmailCheckResponse(boolean available) {}

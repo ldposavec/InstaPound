@@ -1,7 +1,6 @@
 package hr.algebra.nrako.instapound.model.entity;
 
 import hr.algebra.nrako.instapound.enums.AuthProvider;
-import hr.algebra.nrako.instapound.enums.ImageFormat;
 import hr.algebra.nrako.instapound.enums.PackageType;
 import hr.algebra.nrako.instapound.enums.UserRole;
 import hr.algebra.nrako.instapound.model.valueobject.PackageUsage;
@@ -47,19 +46,23 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private UserRole role = UserRole.ANONYMOUS;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private AuthProvider authProvider = AuthProvider.LOCAL;
 
     private String providerId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private PackageType packageType = PackageType.FREE;
 
     @Embedded
+    @Builder.Default
     private PackageUsage packageUsage = new PackageUsage();
 
     private LocalDate lastPackageChangeDate;
@@ -70,6 +73,7 @@ public class User {
     private PackageType pendingPackageType;
 
     @Column(nullable = false)
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime lastLoginAt;
@@ -77,15 +81,16 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<Photo> photos = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<ActionLog> actionLogs = new HashSet<>();
 
     public Boolean canUpload(Long fileSize, UserPackage userPackage) {
-        if (packageUsage.getTodayUploadCount() == null) packageUsage.setTodayUploadCount(0);
 
         LocalDate today = LocalDate.now();
         if (!today.equals(packageUsage.getLastUploadDate())) {

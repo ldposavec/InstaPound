@@ -25,7 +25,7 @@
         name = ''
     }: Props = $props();
 
-    const inputId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+    const inputId = $derived(id || `textarea-${Math.random().toString(36).substring(2, 9)}`);
 </script>
 
 <div class="w-full">

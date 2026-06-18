@@ -43,20 +43,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<UserResponse> getById(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        return user.map(userMapper::toDto);
+        return userRepository.findById(id).map(userMapper::toDto);
     }
 
     @Override
     public Optional<UserResponse> getByEmail(String email) {
-        User user = userRepository.findByEmail(email);
-        return Optional.ofNullable(user).map(userMapper::toDto);
+        return Optional.ofNullable(userRepository.findByEmail(email)).map(userMapper::toDto);
     }
 
     @Override
     public Optional<UserResponse> getByUsername(String username) {
-        User user = userRepository.findByUsername(username);
-        return Optional.ofNullable(user).map(userMapper::toDto);
+        return Optional.ofNullable(userRepository.findByUsername(username)).map(userMapper::toDto);
     }
 
     private User toEntity(UserResponse user) {

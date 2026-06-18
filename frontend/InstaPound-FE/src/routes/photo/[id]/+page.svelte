@@ -2,7 +2,7 @@
     import { page } from '$app/state';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import {ArrowLeft, Download, Edit, Trash2, Eye, Calendar, User, FileImage, Share2 } from 'lucide-svelte';
+    import {ArrowLeft, Download, Edit, Trash2, Eye, Calendar, User, FileImage } from 'lucide-svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import Card from '$lib/components/ui/Card.svelte';
     import Alert from '$lib/components/ui/Alert.svelte';
@@ -40,7 +40,7 @@
     const filterOptions: ImageFilter[] = ['GRAYSCALE', 'SEPIA', 'INVERT', 'BLUR', 'SHARPEN', 'VINTAGE'];
 
     onMount(async () => {
-        const id = parseInt(page.params.id);
+        const id = parseInt(page.params.id ?? '');
         if (isNaN(id)) {
             error = 'Invalid photo ID';
             loading = false;
@@ -317,9 +317,10 @@
                     rows={3}
             />
             <div>
-                <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Hashtags</label>
+                <label for="edit-hashtag-input" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Hashtags</label>
                 <div class="flex gap-2">
                     <Input
+                            id="edit-hashtag-input"
                             type="text"
                             placeholder="Add hashtag..."
                             bind:value={hashtagInput}
@@ -365,8 +366,8 @@
                 <Input type="number" bind:value={downloadWidth} label="Width (px)" placeholder="Auto" />
                 <Input type="number" bind:value={downloadHeight} label="Height (px)" placeholder="Auto" />
             </div>
-            <div>
-                <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Filters</label>
+            <fieldset>
+                <legend class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Filters</legend>
                 <div class="flex flex-wrap gap-2">
                     {#each filterOptions as filter}
                         <button
@@ -380,7 +381,7 @@
                         </button>
                     {/each}
                 </div>
-            </div>
+            </fieldset>
         </div>
         <div class="mt-6 space-y-3">
             <Button class="w-full" loading={actionLoading} onclick={() => handleDownload(true)}>

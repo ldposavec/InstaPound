@@ -215,11 +215,12 @@
                                 rows={3}
                         />
                         <div>
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            <label for="hashtag-input" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
                                 Hashtags
                             </label>
                             <div class="flex gap-2">
                                 <Input
+                                        id="hashtag-input"
                                         type="text"
                                         placeholder="Add hashtags..."
                                         bind:value={hashtagInput}

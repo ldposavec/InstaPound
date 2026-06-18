@@ -11,6 +11,7 @@
     import { authStore } from '$lib/stores/auth.svelte';
     import { packageStore } from '$lib/stores/packages.svelte';
     import { photosApi } from '$lib/api';
+    import { photosStore } from '$lib/stores/photo.svelte';
     import { goto } from '$app/navigation';
     import type { Photo, Page } from '$lib/types';
     
@@ -222,15 +223,12 @@
                 onclose={() => (selectedPhoto = null)}
                 ondelete={async () => {
 				if (selectedPhoto) {
-					await photosApi.delete(selectedPhoto.id);
+					await photosStore.deletePhoto(selectedPhoto.id);
 					selectedPhoto = null;
 					await loadPhotos();
 				}
 			}}
         />
-        <!--                onedit={() => {-->
-        <!--                    -->
-        <!--			}}-->
     {/if}
 {:else}
     <div class="flex min-h-[calc(100vh-200px)] items-center justify-center">

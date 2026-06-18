@@ -85,10 +85,12 @@ export const authApi = {
         const formData = new URLSearchParams();
         formData.append('username', username);
         formData.append('password', password);
-        const response = await fetch(`${API_BASE}/auth/login`, {
+        const jsonBody = '{"username":"' + username + '","password":"' + password + '"}';
+        const response = await fetch(`localhost:8080${API_BASE}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
+                // 'Content-Type': 'application/json'
             },
             body: formData,
             credentials: 'include'

@@ -43,7 +43,12 @@
 {#if open}
     <div
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-label={title || 'Dialog'}
+            tabindex="-1"
             onclick={handleBackdropClick}
+            onkeydown={handleKeydown}
     >
         <div
                 class="w-full animate-in fade-in zoom-in-95 rounded-2xl bg-white p-6 shadow-2xl duration-200 dark:bg-slate-900 {sizes[

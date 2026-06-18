@@ -35,7 +35,7 @@ public class PhotoServiceImpl implements PhotoService {
         return photoRepository.findAll()
                 .stream()
                 .map(photoMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -112,13 +112,7 @@ public class PhotoServiceImpl implements PhotoService {
             masterSpecification = masterSpecification.and(PhotoSpecification.fromSearchRequest(searchRequest));
         }
 
-//        Page<PhotoResponse> photos = photoRepository.findAll(masterSpecification, pageable)
-        return photoRepository.findAll(masterSpecification, pageable)
-//                .stream()
-                .map(photoMapper::toDto);
-//                .collect(Collectors.toList());
-
-//        return new PageImpl<>(photos, pageable, photos.size());
+        return photoRepository.findAll(masterSpecification, pageable).map(photoMapper::toDto);
     }
 
 //    private PhotoResponse toDto(Photo photo) {
@@ -149,6 +143,8 @@ public class PhotoServiceImpl implements PhotoService {
                 : response.getHashtags().stream()
                 .map(tag -> Hashtag.builder().withTag(tag).build())
                 .collect(Collectors.toSet());
+        User user = userRepository.findById(response.getAuthorId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + response.getAuthorId()));
         return Photo.builder()
                 .id(response.getId())
                 .originalFileName(response.getOriginalFileName())
@@ -156,7 +152,7 @@ public class PhotoServiceImpl implements PhotoService {
                 .hashtags(hashtags)
                 .thumbnailUrl(response.getThumbnailUrl())
                 .processedUrl(response.getProcessedUrl())
-                .user(userRepository.findById(response.getAuthorId()).get())
+                .user(user)
                 .fileSizeBytes(response.getFileSizeBytes())
                 .width(response.getWidth())
                 .height(response.getHeight())

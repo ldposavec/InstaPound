@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -31,7 +30,7 @@ public class UserPackageServiceImpl implements UserPackageService {
     public List<PackageInfoResponse> getAllPackages() {
         return userPackageRepository.findAll().stream()
                 .map(this::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -92,16 +91,14 @@ public class UserPackageServiceImpl implements UserPackageService {
         List<User> usersWithPendingChanges = userRepository.findUsersWithPendingPackageChanges();
 
         for (User user : usersWithPendingChanges) {
-            if (user.getLastPackageChangeDate() != null && !LocalDate.now().isBefore(user.getPackageChangeEffectiveDate())) {
-                PackageType oldPackage = user.getPackageType();
-                user.setPackageType(user.getPendingPackageType());
-                user.setPendingPackageType(null);
-                user.setPackageChangeEffectiveDate(null);
-                user.setLastPackageChangeDate(LocalDate.now());
-                userRepository.save(user);
+            PackageType oldPackage = user.getPackageType();
+            user.setPackageType(user.getPendingPackageType());
+            user.setPendingPackageType(null);
+            user.setPackageChangeEffectiveDate(null);
+            user.setLastPackageChangeDate(LocalDate.now());
+            userRepository.save(user);
 
-                log.info("Applied package change for user {}: {} -> {}", user.getUsername(), oldPackage, user.getPackageType());
-            }
+            log.info("Applied package change for user {}: {} -> {}", user.getUsername(), oldPackage, user.getPackageType());
         }
     }
 

@@ -5,7 +5,6 @@ import hr.algebra.nrako.instapound.enums.StorageType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +23,7 @@ public class StorageServiceImpl {
         this.storageConfig = storageConfig;
         this.strategies = strategyList.stream()
                 .collect(Collectors.toMap(StorageStrategy::getStorageType, Function.identity()));
-        log.info("Storage service initiailized with {} strategies", strategies.size());
+        log.info("Storage service initialized with {} strategies", strategies.size());
     }
 
     public StorageStrategy getStrategy(StorageType type) {
@@ -36,9 +35,6 @@ public class StorageServiceImpl {
         return strategy;
     }
 
-    public String store(MultipartFile file, String filename, StorageType type) throws IOException {
-        return getStrategy(type).store(file, filename);
-    }
 
     public String store(byte[] data, String filename, String contentType, StorageType storageType) throws IOException {
         return getStrategy(storageType).store(data, filename, contentType);

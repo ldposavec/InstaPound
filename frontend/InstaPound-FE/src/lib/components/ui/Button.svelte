@@ -61,7 +61,5 @@
             />
         </svg>
     {/if}
-    <!--{#if children}-->
-        {@render children?.()}
-    <!--{/if}-->
+    {@render children?.()}
 </button>

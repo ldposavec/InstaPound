@@ -27,11 +27,11 @@
         id = '',
         name = '',
         oninput,
-        onchange
+        onchange,
+        onkeydown
     }: Props = $props();
 
-    // const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
-    const inputId = id || `input-${Math.random().toString(36).substring(2, 9)}`;
+    const inputId = $derived(id || `input-${Math.random().toString(36).substring(2, 9)}`);
 </script>
 
 <div class="w-full">
@@ -51,6 +51,7 @@
             {required}
             {oninput}
             {onchange}
+            {onkeydown}
             class="w-full rounded-lg border bg-white px-4 py-2.5 text-slate-900 transition-all duration-200
             placeholder:text-slate-400 focus:outline-none focus:ring-2 disabled:cursor-not-allowed
             disabled:bg-slate-50 disabled:text-slate-500 dark:bg-slate-900 dark:text-slate-100

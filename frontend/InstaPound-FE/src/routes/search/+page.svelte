@@ -40,38 +40,25 @@
         }
     }
 
-    async function handleSearch(e?: Event) {
-        e?.preventDefault();
-        const request: PhotoSearchRequest = {
-            page: 0,
-            pageSize: 12
-        };
-
+    function buildSearchRequest(page = 0): PhotoSearchRequest {
+        const request: PhotoSearchRequest = { page, pageSize: 12 };
         if (hashtags.length > 0) request.hashtags = hashtags;
         if (author.trim()) request.author = author.trim();
         if (uploadedAfter) request.uploadedAfter = new Date(uploadedAfter).toISOString();
         if (uploadedBefore) request.uploadedBefore = new Date(uploadedBefore).toISOString();
         if (minSizeMB) request.minSizeBytes = Number(minSizeMB) * 1024 * 1024;
         if (maxSizeMB) request.maxSizeBytes = Number(maxSizeMB) * 1024 * 1024;
+        return request;
+    }
 
-        await photosStore.search(request);
+    async function handleSearch(e?: Event) {
+        e?.preventDefault();
+        await photosStore.search(buildSearchRequest(0));
         searched = true;
     }
 
     async function handlePageChange(page: number) {
-        const request: PhotoSearchRequest = {
-            page,
-            pageSize: 12
-        };
-
-        if (hashtags.length > 0) request.hashtags = hashtags;
-        if (author.trim()) request.author = author.trim();
-        if (uploadedAfter) request.uploadedAfter = new Date(uploadedAfter).toISOString();
-        if (uploadedBefore) request.uploadedBefore = new Date(uploadedBefore).toISOString();
-        if (minSizeMB) request.minSizeBytes = Number(minSizeMB) * 1024 * 1024;
-        if (maxSizeMB) request.maxSizeBytes = Number(maxSizeMB) * 1024 * 1024;
-
-        await photosStore.search(request);
+        await photosStore.search(buildSearchRequest(page));
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 

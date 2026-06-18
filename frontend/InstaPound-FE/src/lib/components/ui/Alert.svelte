@@ -40,7 +40,7 @@
         }
     };
 
-    const IconComponent = variants[variant].icon;
+    const IconComponent = $derived(variants[variant].icon);
 </script>
 
 {#if visible}

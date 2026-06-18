@@ -34,7 +34,7 @@
         onchange
     }: Props = $props();
 
-    const inputId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
+    const inputId = $derived(id || `select-${Math.random().toString(36).substring(2, 9)}`);
 </script>
 
 <div class="w-full">

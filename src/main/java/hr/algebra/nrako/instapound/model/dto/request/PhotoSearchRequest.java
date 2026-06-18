@@ -20,6 +20,8 @@ public class PhotoSearchRequest {
     private LocalDateTime uploadedBefore;
     private Long minSizeBytes;
     private Long maxSizeBytes;
+    @Builder.Default
     private Integer page = 0;
+    @Builder.Default
     private Integer pageSize = 9;
 }

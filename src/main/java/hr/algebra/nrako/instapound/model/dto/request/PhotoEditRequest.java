@@ -1,6 +1,5 @@
 package hr.algebra.nrako.instapound.model.dto.request;
 
-import hr.algebra.nrako.instapound.model.entity.Hashtag;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

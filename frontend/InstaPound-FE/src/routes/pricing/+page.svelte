@@ -8,9 +8,7 @@
     import Spinner from '$lib/components/ui/Spinner.svelte';
     import { packageStore } from '$lib/stores/packages.svelte';
     import { authStore } from '$lib/stores/auth.svelte';
-    import { loadStripe } from '@stripe/stripe-js';
     import type { PackageType } from '$lib/types';
-    // import { PUBLIC_STRIPE_KEY } from '$env/static/public'
 
     let loading = $state(true);
     let showConfirmModal = $state(false);
@@ -20,8 +18,6 @@
     let changeSuccess = $state('');
     let showStripeModal = $state(false);
 
-    // const STRIPE_PUBLIC_KEY = PUBLIC_STRIPE_KEY || '';
-    const STRIPE_PUBLIC_KEY = '';
 
     const packages = [
         {
@@ -128,19 +124,7 @@
         const pkg = packages.find((p) => p.type === selectedPackageType);
         if (!pkg) return;
         try {
-            // In a real implementation, you would:
-            // 1. Call your backend to create a Stripe Checkout session
-            // 2. Redirect to Stripe Checkout
-            // For demo purposes, we'll just confirm the change
-            // const stripe = await loadStripe(STRIPE_PUBLIC_KEY);
-            // const response = await fetch('/api/create-checkout-session', {
-            //   method: 'POST',
-            //   headers: { 'Content-Type': 'application/json' },
-            //   body: JSON.stringify({ packageType: selectedPackageType })
-            // });
-            // const { sessionId } = await response.json();
-            // await stripe?.redirectToCheckout({ sessionId });
-            // For now, just confirm the change
+            // TODO: integrate real Stripe checkout session when backend endpoint is available
             await handleConfirmChange();
         } catch (err) {
             changeError = 'Payment processing failed. Please try again.';
@@ -237,6 +221,7 @@
                     {@const isPending = authStore.user?.pendingPackageType === pkg.type}
                     {@const colors = getColorClasses(pkg.type === 'FREE'
                             ? 'slate' : pkg.type === 'PRO' ? 'violet' : 'amber', isCurrentPlan)}
+                    {@const Icon = pkg.icon}
                     <div class="relative">
                         {#if pkg.popular}
                             <div class="absolute -top-4 left-1/2 z-10 -translate-x-1/2">
@@ -252,17 +237,8 @@
                         >
                             <div class="p-8">
                                 <div class="mb-4 flex items-center gap-3">
-<!--                                    <div class="rounded-xl bg-{pkg.color}-100 dark:bg-{pkg.color}-900/50 p-3">-->
-<!--                                        <svelte:component-->
-<!--                                                this={pkg.icon}-->
-<!--                                                class="h-6 w-6 text-{pkg.color}-600 dark:text-{pkg.color}-400"-->
-<!--                                        />-->
-<!--                                    </div>-->
                                     <div class="rounded-xl p-3 {pkg.iconBg}">
-                                        <svelte:component
-                                                this={pkg.icon}
-                                                class="h-6 w-6 {pkg.iconColor}"
-                                        />
+                                        <Icon class="h-6 w-6 {pkg.iconColor}" />
                                     </div>
                                     <div>
                                         <h3 class="text-xl font-bold text-slate-900 dark:text-white">{pkg.name}</h3>
