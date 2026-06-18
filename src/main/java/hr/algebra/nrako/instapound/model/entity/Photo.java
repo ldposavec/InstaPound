@@ -2,10 +2,7 @@ package hr.algebra.nrako.instapound.model.entity;
 
 import hr.algebra.nrako.instapound.enums.StorageType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -42,6 +39,7 @@ public class Photo {
         joinColumns = @JoinColumn(name = "photo_id"),
         inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
+    @Builder.Default
     private Set<Hashtag> hashtags = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
@@ -57,10 +55,13 @@ public class Photo {
     private String mimeType;
 
     @Column(nullable = false)
+    @Builder.Default
     private LocalDateTime uploadedAt = LocalDateTime.now();
 
     private LocalDateTime editedAt;
+    @Builder.Default
     private Long downloadCount = 0L;
+    @Builder.Default
     private Long viewCount = 0L;
 
     public void addHashtag(Hashtag hashtag) {

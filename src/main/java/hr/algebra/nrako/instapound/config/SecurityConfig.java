@@ -1,11 +1,11 @@
 package hr.algebra.nrako.instapound.config;
 
+import hr.algebra.nrako.instapound.security.TokenAuthenticationFilter;
 import hr.algebra.nrako.instapound.service.implementations.CustomOAuth2UserServiceImpl;
-import hr.algebra.nrako.instapound.service.implementations.CustomUserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -22,68 +22,76 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final CustomUserDetailsServiceImpl userDetailsService;
-//    private final CustomOAuth2UserServiceImpl oAuth2UserService;
+    private final CustomOAuth2UserServiceImpl oAuth2UserService;
+    private final TokenAuthenticationFilter tokenAuthenticationFilter;
 
     @Bean
+    @Primary
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/photos/browse/**", "/api/photos/search/**",
-                                "api/photos/file/**", "/api/photos/{id}", "/api/user/packages", "/h2-console/**",
-                                "/error").permitAll()
+                                "/api/photos/file/**", "/api/photos/{id}", "/api/user/packages", "/h2-console/**",
+                                "/error", "/login/**", "/oauth2/**", "/actuator/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/photos/upload/**", "/api/photos/edit/**", "/api/user/package/**")
                             .hasAnyRole("REGISTERED", "ADMIN")
+//                            .permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(form -> form
-                        .loginProcessingUrl("/api/auth/login")
+                        .loginProcessingUrl("/api/auth/form-login")
+//                                .loginProcessingUrl("/authorization-code/callback")
                         .defaultSuccessUrl("/api/user/profile")
                         .permitAll()
+                ).oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
+                        .defaultSuccessUrl("/api/user/profile", true)
+                ).logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .logoutSuccessUrl("/")
+                        .permitAll()
+                ).headers(headers ->
+                        headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
+        http.addFilterBefore(tokenAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+//        if (oAuth2UserService != null) http.oauth2Login(oauth2 -> oauth2
+//                .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
+//                .defaultSuccessUrl("/api/user/profile")
+//        );
+        return http.build();
+    }
+
+//    @Bean
+//    @ConditionalOnProperty(name = "spring.security.oauth2.client.registration.google.client-id")
+//    public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http, CustomOAuth2UserServiceImpl oAuth2UserService)
+//            throws Exception {
+//        http
+//                .csrf(AbstractHttpConfigurer::disable)
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/api/auth/**", "/api/photos/browse/**", "/api/photos/search/**",
+//                                "/api/photos/file/**", "/api/photos/{id}", "/api/user/packages",
+//                                "/h2-console/**", "/error").permitAll()
+//                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+//                        .requestMatchers("/api/photos/upload/**", "/api/photos/edit/**", "/api/user/package/**")
+//                        .hasAnyRole("REGISTERED", "ADMIN")
+//                        .anyRequest().authenticated()
+//                ).formLogin(form -> form
+//                                .loginProcessingUrl("/api/auth/login")
+//                                .defaultSuccessUrl("/api/user/profile")
+//                                .permitAll()
 //                ).oauth2Login(oauth2 -> oauth2
 //                        .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
 //                        .defaultSuccessUrl("/api/user/profile")
-                ).logout(logout -> logout
-                        .logoutUrl("/api/auth/logout")
-                        .logoutSuccessUrl("/")
-                        .permitAll()
-                ).headers(headers ->
-                        headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
-
-        return http.build();
-    }
-
-    @Bean
-    @ConditionalOnProperty(name = "spring.security.oauth2.client.registration.google.client-id")
-    public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http, CustomOAuth2UserServiceImpl oAuth2UserService)
-            throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/photos/browse/**", "/api/photos/search/**",
-                                "/api/photos/file/**", "/api/photos/{id}", "/api/user/packages",
-                                "/h2-console/**", "/error").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/photos/upload/**", "/api/photos/edit/**", "/api/user/package/**")
-                        .hasAnyRole("REGISTERED", "ADMIN")
-                        .anyRequest().authenticated()
-                ).formLogin(form -> form
-                                .loginProcessingUrl("/api/auth/login")
-                                .defaultSuccessUrl("/api/user/profile")
-                                .permitAll()
-                ).oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
-                        .defaultSuccessUrl("/api/user/profile")
-                ).logout(logout -> logout
-                        .logoutUrl("/api/auth/logout")
-                        .logoutSuccessUrl("/")
-                        .permitAll()
-                ).headers(headers ->
-                        headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
-
-        return http.build();
-    }
+//                ).logout(logout -> logout
+//                        .logoutUrl("/api/auth/logout")
+//                        .logoutSuccessUrl("/")
+//                        .permitAll()
+//                ).headers(headers ->
+//                        headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
+//
+//        return http.build();
+//    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

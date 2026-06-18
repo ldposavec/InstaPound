@@ -27,5 +27,6 @@ public class UserRegistrationRequest {
     @Size(min = 6, message = "Password must be  at least 6 characters")
     private String password;
 
+    @Builder.Default
     private PackageType packageType = PackageType.FREE;
 }
