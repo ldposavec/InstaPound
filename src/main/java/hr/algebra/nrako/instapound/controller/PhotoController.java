@@ -10,7 +10,6 @@ import hr.algebra.nrako.instapound.model.entity.User;
 import hr.algebra.nrako.instapound.model.entity.UserPackage;
 import hr.algebra.nrako.instapound.model.mappers.PhotoMapper;
 import hr.algebra.nrako.instapound.model.valueobject.ImageProcessingOptions;
-import hr.algebra.nrako.instapound.model.valueobject.PackageUsage;
 import hr.algebra.nrako.instapound.repository.HashtagRepository;
 import hr.algebra.nrako.instapound.repository.PhotoRepository;
 import hr.algebra.nrako.instapound.repository.UserRepository;
@@ -29,7 +28,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.relational.core.sql.In;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -38,8 +36,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
@@ -75,6 +71,7 @@ public class PhotoController {
             @RequestParam(value = "hashtags", required = false) Set<String> hashtags,
             @RequestParam(value = "storageType", defaultValue = "LOCAL") StorageType storageType,
             @RequestParam(value = "format", required = false) ImageFormat imageFormat,
+            @RequestParam(value = "filters", required = false) Set<String> filters,
             @RequestParam(value = "width", required = false) Integer targetWidth,
             @RequestParam(value = "height", required = false) Integer targetHeight,
             @AuthenticationPrincipal UserDetails userDetails,
@@ -97,9 +94,12 @@ public class PhotoController {
             String storedFilename = UUID.randomUUID().toString() + extension;
 
             byte[] imageData = file.getBytes();
-            if (imageFormat != null || targetWidth != null || targetHeight != null) {
+            Set<ImageFilter> imageFilters = filters != null ? filters.stream()
+                    .map(f -> ImageFilter.valueOf(f.toUpperCase())).collect(Collectors.toSet()) : new HashSet<>();
+            if (imageFormat != null || targetWidth != null || targetHeight != null || !imageFilters.isEmpty()) {
                 ImageProcessingOptions options = ImageProcessingOptions.builder()
                         .imageFormat(imageFormat)
+                        .filters(imageFilters)
                         .width(targetWidth)
                         .height(targetHeight)
                         .build();
@@ -163,7 +163,8 @@ public class PhotoController {
             log.info("Photo uploaded successfully: {} by {}", storedFilename, user.getUsername());
             return ResponseEntity.ok(photoMapper.toDto(photo));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.error("Error uploading photo", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading photo: " + e.getMessage());
         }
     }
 
@@ -232,7 +233,7 @@ public class PhotoController {
                 String normalizedTag = tag.toLowerCase().trim();
                 Hashtag hashtag = hashtagRepository.findByTag(normalizedTag);
                 if (hashtag == null) {
-                    hashtag = Hashtag.builder().withTag(tag).build();
+                    hashtag = Hashtag.builder().withTag(normalizedTag).build();
                     hashtagRepository.save(hashtag);
                 }
                 hashtag.incrementUsage();
@@ -327,7 +328,7 @@ public class PhotoController {
                         "Downloaded photo: " + id + (original ? " (original)" : " (processed)"),
                         ipUtils.getClientIp(request), id);
             } else {
-                actionLogService.logAnonymousAction(ActionType.PHOTO_UPLOAD, "Downloaded photo: " + id,
+                actionLogService.logAnonymousAction(ActionType.PHOTO_DOWNLOAD, "Downloaded photo: " + id,
                         ipUtils.getClientIp(request));
             }
 
@@ -338,7 +339,7 @@ public class PhotoController {
             ) : photo.getOriginalFileName();
 
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
+                    .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + filename + "\"")
                     .body(new InputStreamResource(new ByteArrayInputStream(imageData)));
         } catch (IOException e) {
@@ -355,7 +356,7 @@ public class PhotoController {
     ) {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) return ResponseEntity.notFound().build();
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "uploadedAt"));
         Page<Photo> photos = photoRepository.findByUserOrderByUploadedAtDesc(userOpt.get(), pageable);
 
         return ResponseEntity.ok(photos.map(photoMapper::toDto));

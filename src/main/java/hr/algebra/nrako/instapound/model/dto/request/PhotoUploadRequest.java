@@ -17,11 +17,15 @@ import java.util.Set;
 @AllArgsConstructor
 public class PhotoUploadRequest {
     private String description;
+    @Builder.Default
     private Set<String> hashtags = new HashSet<>();
+    @Builder.Default
     private StorageType storageType = StorageType.LOCAL;
     private ImageFormat imageFormat;
     private Integer targetWidth;
     private Integer targetHeight;
+    @Builder.Default
     private Set<ImageFilter> filters = new HashSet<>();
+    @Builder.Default
     private Integer quality = 85;
 }

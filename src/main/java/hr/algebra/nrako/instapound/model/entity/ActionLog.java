@@ -15,9 +15,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "ACTION_LOGS", indexes = {
-        @Index(name = "idx_user_id", columnList = "userId"),
-        @Index(name = "idx_action_type", columnList = "actionType"),
-        @Index(name = "idx_timestamp", columnList = "timestamp")
+        @Index(name = "idx_action_log_user_id", columnList = "userId"),
+        @Index(name = "idx_action_log_type", columnList = "action_type"),
+        @Index(name = "idx_action_log_timestamp", columnList = "timestamp")
 })
 public class ActionLog {
 
@@ -41,6 +41,7 @@ public class ActionLog {
     private String ipAddress;
 
     @Column(nullable = false)
+    @Builder.Default
     private LocalDateTime timestamp = LocalDateTime.now();
 
     private Long targetPhotoId;

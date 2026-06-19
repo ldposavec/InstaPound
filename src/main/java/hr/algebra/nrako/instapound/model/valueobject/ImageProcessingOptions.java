@@ -19,5 +19,6 @@ public class ImageProcessingOptions {
     private Integer width;
     private Integer height;
     private Integer quality;
+    @Builder.Default
     private Set<ImageFilter> filters = new HashSet<>();
 }

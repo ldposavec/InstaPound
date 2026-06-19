@@ -14,6 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PhotoDownloadRequest {
+    @Builder.Default
     private boolean original = true;
     private ImageFormat format;
     private Integer width;

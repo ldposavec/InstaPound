@@ -23,7 +23,7 @@ public class ImageProcessorServiceImpl {
 
     public byte[] processImage(InputStream inputStream, ImageProcessingOptions options) throws IOException {
         BufferedImage image = ImageIO.read(inputStream);
-        if (image == null) throw new IOException("Could not read found");
+        if (image == null) throw new IOException("Could not read image");
 
         image = applyResize(image, options);
 
