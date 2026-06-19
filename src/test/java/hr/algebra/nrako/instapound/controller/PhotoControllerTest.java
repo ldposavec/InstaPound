@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -67,6 +68,17 @@ public class PhotoControllerTest {
         mvc.perform(get("/api/photos/browse").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].originalFileName").value("a.jpg"));
+    }
+
+    @Test
+    void testGetPhotoById() throws Exception {
+        Photo p = Photo.builder().id(1L).originalFileName("a.jpg").build();
+        when(photoRepository.findById(1L)).thenReturn(Optional.of(p));
+        when(photoMapper.toDto(p)).thenReturn(hr.algebra.nrako.instapound.model.dto.response.PhotoResponse.builder().id(1L).originalFileName("a.jpg").build());
+
+        mvc.perform(get("/api/photos/1").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.originalFileName").value("a.jpg"));
     }
 }
 
