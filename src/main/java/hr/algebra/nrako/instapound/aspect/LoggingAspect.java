@@ -15,12 +15,12 @@ public class LoggingAspect {
 
     @Before("within(hr.algebra.nrako.instapound.service..*)")
     public void beforeService(JoinPoint jp) {
-        log.debug("Entering {}.{}", jp.getSignature().getDeclaringTypeName(), jp.getSignature().getName());
+        log.info("Entering {}.{}", jp.getSignature().getDeclaringTypeName(), jp.getSignature().getName());
     }
 
     @AfterReturning(pointcut = "within(hr.algebra.nrako.instapound.service..*)", returning = "ret")
     public void afterService(JoinPoint jp, Object ret) {
-        log.debug("Exiting {}.{} with {}", jp.getSignature().getDeclaringTypeName(), jp.getSignature().getName(), ret);
+        log.info("Exiting {}.{} with {}", jp.getSignature().getDeclaringTypeName(), jp.getSignature().getName(), ret);
     }
 
     @AfterThrowing(pointcut = "within(hr.algebra.nrako.instapound.service..*)", throwing = "ex")

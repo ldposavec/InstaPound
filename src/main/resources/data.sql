@@ -31,7 +31,7 @@ INSERT INTO HASHTAGS(tag, usage_count) VALUES ('landscape', 0);
 --password: admin123
 INSERT INTO USERS (username, email, password, role, auth_provider, package_type, created_at, current_photo_count,
                    today_upload_count, total_storage_used)
-VALUES ('admin', 'admin@instapound.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.6Uc7ThQFljIPLO', 'ADMIN',
+VALUES ('admin', 'admin@instapound.com', '$2a$12$XeSnvFYTL9eG1YcR7RNG0OWnpTBIubH/EfaB/U1bK0O8uoR2eDfRq', 'ADMIN',
         'LOCAL', 'GOLD', CURRENT_TIMESTAMP, 0, 0, 0);
 
 -- password: user123
