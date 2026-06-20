@@ -11,7 +11,8 @@ import type {
     ImageFormat,
     ImageFilter,
     UserStatistics,
-    StorageType, RegisterRequest
+    StorageType,
+    RegisterRequest
 } from "$lib/types";
 
 const API_BASE = '/api';
@@ -26,6 +27,50 @@ class ApiError extends Error {
     }
 }
 
+// interface TokenPair {
+//     accessToken: string;
+//     refreshToken: string;
+// }
+
+let accessToken: string | null = null;
+let refreshPromise: Promise<boolean> | null = null;
+
+export function setAccessToken(token: string | null) {
+    accessToken = token;
+}
+
+export function getAccessToken(): string | null {
+    return accessToken;
+}
+
+async function tryRefreshToken(): Promise<boolean> {
+    if (refreshPromise) return refreshPromise;
+
+    refreshPromise = (async () => {
+        try {
+            const response = await fetch(`${API_BASE}/auth/token/refresh`, {
+                method = 'POST',
+                credentials = 'include'
+            });
+            if (!response.ok) {
+                accessToken = null;
+                return false;
+            }
+
+            const data = await response.json();
+            accessToken = data.accessToken;
+            return true;
+        } catch {
+            accessToken = null;
+            return false;
+        } finally {
+            refreshPromise = null;
+        }
+    })();
+
+    return refreshPromise;
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
         const text = await response.text();
@@ -38,42 +83,125 @@ async function handleResponse<T>(response: Response): Promise<T> {
     return response.text() as unknown as T;
 }
 
+function authHeaders(): Record<string, string> {
+    if (accessToken)
+        return { Authorization: `Bearer ${accessToken}` };
+    return {};
+}
+
 async function get<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    // const response = await fetch(`${API_BASE}${endpoint}`, {
+    //     credentials: 'include'
+    // });
+    // return handleResponse<T>(response);
+    let response = await fetch(`${API_BASE}${endpoint}`, {
+        headers: { ...authHeaders() },
         credentials: 'include'
     });
+    if (response.status === 401 && accessToken) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+            response = await fetch(`${API_BASE}${endpoint}`, {
+                headers: { ...authHeaders() },
+                credentials: 'include'
+            });
+        }
+    }
     return handleResponse<T>(response);
 }
 
 async function post<T>(endpoint: string, data?: unknown): Promise<T> {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    // const response = await fetch(`${API_BASE}${endpoint}`, {
+    //     method: 'POST',
+    //     headers: {
+    //         'Content-Type': 'application/json'
+    //     },
+    //     body: data ? JSON.stringify(data) : undefined,
+    //     credentials: 'include'
+    // });
+    // return handleResponse<T>(response);
+    let response = await fetch(`${API_BASE}${endpoint}`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...authHeaders()
         },
         body: data ? JSON.stringify(data) : undefined,
         credentials: 'include'
     });
+    if (response.status === 401 && accessToken) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+            response = await fetch(`${API_BASE}${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeaders()
+                },
+                body: data ? JSON.stringify(data) : undefined,
+                credentials: 'include'
+            });
+        }
+    }
+
     return handleResponse<T>(response);
 }
 
 async function put<T>(endpoint: string, data: unknown): Promise<T> {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    // const response = await fetch(`${API_BASE}${endpoint}`, {
+    //     method: 'PUT',
+    //     headers: {
+    //         'Content-Type': 'application/json'
+    //     },
+    //     body: JSON.stringify(data),
+    //     credentials: 'include'
+    // });
+    let response = await fetch(`${API_BASE}${endpoint}`, {
         method: 'PUT',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...authHeaders()
         },
         body: JSON.stringify(data),
         credentials: 'include'
     });
+    if (response.status === 401 && accessToken) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+            response = await fetch(`${API_BASE}${endpoint}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeaders()
+                },
+                body: JSON.stringify(data),
+                credentials: 'include'
+            });
+        }
+    }
     return handleResponse<T>(response);
 }
 
 async function del<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    // const response = await fetch(`${API_BASE}${endpoint}`, {
+    //     method: 'DELETE',
+    //     credentials: 'include'
+    // });
+    let response = await fetch(`${API_BASE}${endpoint}`, {
         method: 'DELETE',
+        headers: { ...authHeaders() },
         credentials: 'include'
     });
+    if (response.status === 401 && accessToken) {
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+            response = await fetch(`${API_BASE}${endpoint}`, {
+                method: 'DELETE',
+                headers: { ...authHeaders() },
+                credentials: 'include'
+            });
+        }
+    }
     return handleResponse<T>(response);
 }
 
@@ -81,23 +209,38 @@ export const authApi = {
     async register(data: RegisterRequest): Promise<User> {
         return post<User>('/auth/register', data);
     },
-    async login(username: string, password: string): Promise<void> {
-        const formData = new URLSearchParams();
-        formData.append('username', username);
-        formData.append('password', password);
-        const jsonBody = '{"username":"' + username + '","password":"' + password + '"}';
-        const response = await fetch(`localhost:8080${API_BASE}/auth/login`, {
+    async login(username: string, password: string): Promise<TokenPair> {
+        const response = await fetch(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-                // 'Content-Type': 'application/json'
+                'Content-Type': 'application/json'
             },
-            body: formData,
+            body: JSON.stringify({username, password}),
             credentials: 'include'
         });
         if (!response.ok) {
-            throw new ApiError(response.status, 'Invalid credentials');
+            throw new ApiError(response.status, 'Invalid Credentials');
         }
+        const tokens: TokenPair = await response.json();
+        localStorage.setItem('accessToken', tokens.accessToken);
+        localStorage.setItem('refreshToken', tokens.refreshToken);
+        return tokens;
+        // const formData = new URLSearchParams();
+        // formData.append('username', username);
+        // formData.append('password', password);
+        // const jsonBody = '{"username":"' + username + '","password":"' + password + '"}';
+        // const response = await fetch(`localhost:8080${API_BASE}/auth/login`, {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/x-www-form-urlencoded'
+        //         // 'Content-Type': 'application/json'
+        //     },
+        //     body: formData,
+        //     credentials: 'include'
+        // });
+        // if (!response.ok) {
+        //     throw new ApiError(response.status, 'Invalid credentials');
+        // }
     },
     async logout(): Promise<void> {
         const response = await fetch(`${API_BASE}/auth/logout`, {
@@ -118,6 +261,32 @@ export const authApi = {
         return `/oauth2/authorization/${provider}`;
     }
 };
+
+async function tryRefreshToken(): Promise<boolean> {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) return false;
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/token/refresh`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({refreshToken})
+        })
+        if (!response.ok) {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            return false;
+        }
+        const tokens: TokenPair = await response.json();
+        localStorage.setItem('accessToken', tokens.accessToken);
+        localStorage.setItem('refreshToken', tokens.refreshToken);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 export const userApi = {
     async getProfile(): Promise<User> {

@@ -1,5 +1,6 @@
 package hr.algebra.nrako.instapound.controller;
 
+import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import hr.algebra.nrako.instapound.enums.ActionType;
 import hr.algebra.nrako.instapound.enums.AuthProvider;
 import hr.algebra.nrako.instapound.enums.UserRole;
@@ -12,7 +13,9 @@ import hr.algebra.nrako.instapound.model.entity.User;
 import hr.algebra.nrako.instapound.service.interfaces.ActionLogService;
 import hr.algebra.nrako.instapound.service.interfaces.TokenService;
 import hr.algebra.nrako.instapound.utils.IpUtils;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +43,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
-                                   HttpServletRequest httpRequest) {
+                                   HttpServletRequest httpRequest,
+                                   HttpServletResponse httpResponse) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
@@ -57,7 +61,20 @@ public class AuthController {
             actionLogService.logAction(user, ActionType.USER_LOGIN,
                     "User logged in", ipUtils.getClientIp(httpRequest));
             TokenPairResponse tokens = tokenService.issueTokenPair(user);
-            return ResponseEntity.ok(tokens);
+
+            Cookie refreshCookie = new Cookie("refresh_token", tokens.getRefreshToken());
+            refreshCookie.setHttpOnly(true);
+            refreshCookie.setSecure(true);
+            refreshCookie.setPath("/api/auth/token");
+            refreshCookie.setMaxAge(7 * 24 * 60 * 60);
+            refreshCookie.setAttribute("SameSite", "Strict");
+            httpResponse.addCookie(refreshCookie);
+
+            return ResponseEntity.ok(new AccessTokenResponse(
+                    tokens.getAccessToken(),
+                    tokens.getTokenType(),
+                    tokens.getAccessTokenExpiresInSeconds()
+            ));
         } catch (Exception e) {
             log.warn("Login failed for username {}", request.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
@@ -122,4 +139,5 @@ public class AuthController {
 
     private record UsernameCheckResponse(boolean available) {}
     private record EmailCheckResponse(boolean available) {}
+    private record AccessTokenResponse(String accessToken, String tokenType, long accessTokenExpiresInSeconds) {}
 }
