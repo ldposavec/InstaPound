@@ -56,6 +56,8 @@ function createAuthStore() {
         } catch {
 
         }
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
         user = null;
     }
 

@@ -1,16 +1,16 @@
 package hr.algebra.nrako.instapound.model.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = "photos")
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "HASHTAGS")
