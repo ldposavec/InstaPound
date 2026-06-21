@@ -1,7 +1,6 @@
 package hr.algebra.nrako.instapound.aspect;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +10,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.TimeUnit;
 
 @Aspect
 @Component
@@ -33,8 +30,7 @@ public class ControllerMetricsAspect {
 
         Timer.Sample sample = Timer.start(meterRegistry);
         try {
-            Object result = pjp.proceed();
-            return result;
+            return pjp.proceed();
         } catch (Throwable t) {
             meterRegistry.counter("controller.calls.exceptions", tags).increment();
             throw t;

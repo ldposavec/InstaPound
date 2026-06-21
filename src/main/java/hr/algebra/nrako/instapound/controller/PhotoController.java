@@ -1,6 +1,8 @@
 package hr.algebra.nrako.instapound.controller;
 
+import hr.algebra.nrako.instapound.constants.Consts;
 import hr.algebra.nrako.instapound.enums.*;
+import org.springframework.web.bind.annotation.*;
 import hr.algebra.nrako.instapound.model.dto.request.PhotoEditRequest;
 import hr.algebra.nrako.instapound.model.dto.request.PhotoSearchRequest;
 import hr.algebra.nrako.instapound.model.dto.response.PhotoResponse;
@@ -35,7 +37,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
@@ -65,7 +66,7 @@ public class PhotoController {
 
     @PostMapping("/upload")
     @PreAuthorize("hasAnyRole('REGISTERED', 'ADMIN')")
-    public ResponseEntity<?> uploadPhoto(
+    public ResponseEntity<Object> uploadPhoto(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "hashtags", required = false) Set<String> hashtags,
@@ -79,24 +80,22 @@ public class PhotoController {
         try {
             User user = userRepository.findByUsername(userDetails.getUsername());
             if (user == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Consts.USER_NOT_FOUND);
             }
 
             UserPackage userPackage = userPackageService.getPackageByType(user.getPackageType());
-            if (userPackage != null && !user.canUpload(file.getSize(), userPackage)) {
+            if (userCanUpload(file, userPackage, user)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body("Package limit exceeded. Please upgrade your package or wait until tomorrow");
             }
 
             String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename != null && originalFilename.contains(".")
-                    ? originalFilename.substring(originalFilename.lastIndexOf('.')) : ".jpeg";
+            String extension = getExtension(originalFilename);
             String storedFilename = UUID.randomUUID().toString() + extension;
 
             byte[] imageData = file.getBytes();
-            Set<ImageFilter> imageFilters = filters != null ? filters.stream()
-                    .map(f -> ImageFilter.valueOf(f.toUpperCase())).collect(Collectors.toSet()) : new HashSet<>();
-            if (imageFormat != null || targetWidth != null || targetHeight != null || !imageFilters.isEmpty()) {
+            Set<ImageFilter> imageFilters = getImageFilters(filters);
+            if (hasOptions(imageFormat, targetWidth, targetHeight, !imageFilters.isEmpty())) {
                 ImageProcessingOptions options = ImageProcessingOptions.builder()
                         .imageFormat(imageFormat)
                         .filters(imageFilters)
@@ -115,7 +114,7 @@ public class PhotoController {
             String contentType = imageFormat != null ? "image/" + imageFormat.name().toLowerCase() : file.getContentType();
             storageService.store(imageData, storedFilename, contentType, storageType);
 
-            String thumbnailFilename = "thumb_" + storedFilename;
+            String thumbnailFilename = Consts.THUMBNAIL_PREFIX + storedFilename;
             byte[] thumbnailData = imageProcessorService.createThumbnail(new ByteArrayInputStream(imageData),
                     200, 200);
             storageService.store(thumbnailData, thumbnailFilename, "image/jpeg", storageType);
@@ -168,13 +167,26 @@ public class PhotoController {
         }
     }
 
+    private static boolean hasOptions(ImageFormat imageFormat, Integer targetWidth, Integer targetHeight, boolean imageFilters) {
+        return imageFormat != null || targetWidth != null || targetHeight != null || imageFilters;
+    }
+
+    private static String getExtension(String originalFilename) {
+        return originalFilename != null && originalFilename.contains(".")
+                ? originalFilename.substring(originalFilename.lastIndexOf('.')) : ".jpeg";
+    }
+
+    private static boolean userCanUpload(MultipartFile file, UserPackage userPackage, User user) {
+        return userPackage != null && !user.canUpload(file.getSize(), userPackage);
+    }
+
     @GetMapping("/browse")
     public ResponseEntity<Page<PhotoResponse>> browsePhotos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size,
             HttpServletRequest request
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "uploadedAt"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, Consts.UPLOADED_AT));
         Page<Photo> photos = photoRepository.findAllByOrderByUploadedAtDesc(pageable);
 
         actionLogService.logAnonymousAction(ActionType.PHOTO_VIEW, "Browsed photos paged " + page, ipUtils.getClientIp(request));
@@ -187,7 +199,7 @@ public class PhotoController {
         Pageable pageable = PageRequest.of(
                 searchRequest.getPage() != null ? searchRequest.getPage() : 0,
                 searchRequest.getPageSize() != null ? searchRequest.getPageSize() : 10,
-                Sort.by(Sort.Direction.DESC, "uploadedAt"));
+                Sort.by(Sort.Direction.DESC, Consts.UPLOADED_AT));
         Page<Photo> photos = photoRepository.findAll(PhotoSpecification.fromSearchRequest(searchRequest), pageable);
 
         actionLogService.logAnonymousAction(ActionType.USER_SEARCH, "Searched photos with filters", ipUtils.getClientIp(request));
@@ -208,14 +220,14 @@ public class PhotoController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('REGISTERED', 'ADMIN')")
-    public ResponseEntity<?> editPhoto(
+    public ResponseEntity<Object> editPhoto(
             @PathVariable Long id,
             @RequestBody PhotoEditRequest editRequest,
             @AuthenticationPrincipal UserDetails userDetails,
             HttpServletRequest request
             ) {
         User user = userRepository.findByUsername(userDetails.getUsername());
-        if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+        if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Consts.USER_NOT_FOUND);
 
         Optional<Photo> photoOpt = photoRepository.findById(id);
         if (photoOpt.isEmpty()) return ResponseEntity.notFound().build();
@@ -252,12 +264,12 @@ public class PhotoController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('REGISTERED', 'ADMIN')")
-    public ResponseEntity<?> deletePhoto(
+    public ResponseEntity<Object> deletePhoto(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
             HttpServletRequest request) {
         User user = userRepository.findByUsername(userDetails.getUsername());
-        if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+        if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Consts.USER_NOT_FOUND);
         Optional<Photo> photoOpt = photoRepository.findById(id);
         if (photoOpt.isEmpty()) return ResponseEntity.notFound().build();
         Photo photo = photoOpt.get();
@@ -269,12 +281,8 @@ public class PhotoController {
         try {
             storageService.delete(photo.getStoredFileName(), photo.getStorageType());
 
-            String thumbnailFilename = "thumb_" + photo.getStoredFileName();
-            try {
-                storageService.delete(thumbnailFilename, photo.getStorageType());
-            } catch (Exception e) {
-                log.warn("Could not delete thumbnail: {}", thumbnailFilename);
-            }
+            String thumbnailFilename = Consts.THUMBNAIL_PREFIX + photo.getStoredFileName();
+            tryDeleteThumbnail(thumbnailFilename, photo);
 
             photoRepository.delete(photo);
 
@@ -284,6 +292,14 @@ public class PhotoController {
         } catch (IOException e) {
             log.error("Error deleting photo", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting photo: " + e.getMessage());
+        }
+    }
+
+    private void tryDeleteThumbnail(String thumbnailFilename, Photo photo) {
+        try {
+            storageService.delete(thumbnailFilename, photo.getStorageType());
+        } catch (Exception _) {
+            log.warn("Could not delete thumbnail: {}", thumbnailFilename);
         }
     }
 
@@ -306,10 +322,8 @@ public class PhotoController {
             InputStream inputStream = storageService.retrieve(photo.getStoredFileName(), photo.getStorageType());
             byte[] imageData;
 
-            if (!original && (format != null || width != null || height != null || (filters != null && !filters.isEmpty()))) {
-                Set<ImageFilter> imageFilters = filters != null
-                        ? filters.stream().map(f -> ImageFilter.valueOf(f.toUpperCase())).collect(Collectors.toSet())
-                        : new HashSet<>();
+            if (!original && hasOptions(format, width, height, (filters != null && !filters.isEmpty()))) {
+                Set<ImageFilter> imageFilters = getImageFilters(filters);
                 ImageProcessingOptions options = ImageProcessingOptions.builder()
                         .imageFormat(format)
                         .width(width)
@@ -348,6 +362,12 @@ public class PhotoController {
         }
     }
 
+    private static Set<ImageFilter> getImageFilters(Set<String> filters) {
+        return filters != null
+                ? filters.stream().map(f -> ImageFilter.valueOf(f.toUpperCase())).collect(Collectors.toSet())
+                : new HashSet<>();
+    }
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<Page<PhotoResponse>> getPhotosByUser(
             @PathVariable Long userId,
@@ -356,7 +376,7 @@ public class PhotoController {
     ) {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) return ResponseEntity.notFound().build();
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "uploadedAt"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, Consts.UPLOADED_AT));
         Page<Photo> photos = photoRepository.findByUserOrderByUploadedAtDesc(userOpt.get(), pageable);
 
         return ResponseEntity.ok(photos.map(photoMapper::toDto));
@@ -367,7 +387,7 @@ public class PhotoController {
         try {
             Optional<Photo> photoOptional = photoRepository.findByStoredFileName(filename);
             if (photoOptional.isEmpty()) {
-                String originalFilename = filename.startsWith("thumb_") ? filename.substring(6) : filename;
+                String originalFilename = filename.startsWith(Consts.THUMBNAIL_PREFIX) ? filename.substring(6) : filename;
                 if (originalFilename != null) photoOptional = photoRepository.findByStoredFileName(originalFilename);
             }
             StorageType storageType = photoOptional.map(Photo::getStorageType).orElse(StorageType.LOCAL);
@@ -383,27 +403,4 @@ public class PhotoController {
         }
 
     }
-
-//    private PhotoResponse toDto(Photo photo) {
-//        return PhotoResponse.builder()
-//                .id(photo.getId())
-//                .originalFileName(photo.getOriginalFileName())
-//                .description(photo.getDescription())
-//                .hashtags(photo.getHashtags().stream()
-//                        .map(Hashtag::getTag)
-//                        .collect(Collectors.toSet()))
-//                .thumbnailUrl(photo.getThumbnailUrl())
-//                .imageUrl(photo.getStorageUrl())
-//                .processedUrl(photo.getProcessedUrl())
-//                .author(photo.getUser().getUsername())
-//                .authorId(photo.getUser().getId())
-//                .fileSizeBytes(photo.getFileSizeBytes())
-//                .width(photo.getWidth())
-//                .height(photo.getHeight())
-//                .uploadedAt(photo.getUploadedAt())
-//                .editedAt(photo.getEditedAt())
-//                .downloadCount(photo.getDownloadCount())
-//                .viewCount(photo.getViewCount())
-//                .build();
-//    }
 }

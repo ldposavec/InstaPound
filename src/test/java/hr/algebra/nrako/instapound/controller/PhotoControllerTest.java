@@ -1,7 +1,6 @@
 package hr.algebra.nrako.instapound.controller;
 
 import hr.algebra.nrako.instapound.model.entity.Photo;
-import hr.algebra.nrako.instapound.model.entity.User;
 import hr.algebra.nrako.instapound.model.mappers.PhotoMapper;
 import hr.algebra.nrako.instapound.repository.HashtagRepository;
 import hr.algebra.nrako.instapound.repository.PhotoRepository;
@@ -14,8 +13,9 @@ import hr.algebra.nrako.instapound.service.interfaces.UserPackageService;
 import hr.algebra.nrako.instapound.utils.IpUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = PhotoController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@ImportAutoConfiguration(org.springframework.boot.data.autoconfigure.web.DataWebAutoConfiguration.class)
 public class PhotoControllerTest {
 
     @Autowired

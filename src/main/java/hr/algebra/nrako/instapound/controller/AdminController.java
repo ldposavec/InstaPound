@@ -1,5 +1,6 @@
 package hr.algebra.nrako.instapound.controller;
 
+import org.springframework.web.bind.annotation.*;
 import hr.algebra.nrako.instapound.enums.ActionType;
 import hr.algebra.nrako.instapound.model.dto.request.AdminUserUpdateRequest;
 import hr.algebra.nrako.instapound.model.dto.request.PackageCreateRequest;
@@ -30,7 +31,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -70,7 +70,7 @@ public class AdminController {
     }
 
     @PutMapping("/users/{id}")
-    public ResponseEntity<?> updateUser(
+    public ResponseEntity<Object> updateUser(
             @PathVariable Long id,
             @RequestBody AdminUserUpdateRequest updateRequest,
             @AuthenticationPrincipal UserDetails adminDetails,
@@ -110,7 +110,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<?> deleteUser(
+    public ResponseEntity<Object> deleteUser(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails adminDetails,
             HttpServletRequest request) {
@@ -122,13 +122,12 @@ public class AdminController {
         if (user.getId().equals(admin.getId())) return ResponseEntity.badRequest().body("Cannot delete your own " +
                 "account");
 
-//        List<Photo> userPhotos = photoRepository.findByUserOrderByUploadedAtDesc(user, Pageable.unpaged()).getContent();
         List<Photo> userPhotos = photoRepository.findByUser(user);
         for (Photo photo : userPhotos) {
             try {
                 storageService.delete(photo.getStoredFileName(), photo.getStorageType());
                 storageService.delete("thumb_" + photo.getStoredFileName(), photo.getStorageType());
-            } catch (IOException e) {
+            } catch (IOException _) {
                 log.warn("Could not delete photo files for user {}", user.getUsername());
             }
         }
@@ -142,7 +141,7 @@ public class AdminController {
     }
 
     @GetMapping("/users/{id}/statistics")
-    public ResponseEntity<?> getUserStatistics(@PathVariable Long id) {
+    public ResponseEntity<Object> getUserStatistics(@PathVariable Long id) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) return ResponseEntity.notFound().build();
         User user = userOpt.get();
@@ -214,7 +213,7 @@ public class AdminController {
     }
 
     @PostMapping("/packages")
-    public ResponseEntity<?> savePackage(
+    public ResponseEntity<Object> savePackage(
             @RequestBody PackageCreateRequest createRequest,
             @AuthenticationPrincipal UserDetails adminDetails,
             HttpServletRequest request
@@ -252,7 +251,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/photos/{id}")
-    public ResponseEntity<?> deletePhoto(
+    public ResponseEntity<Object> deletePhoto(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails adminDetails,
             HttpServletRequest request
@@ -265,7 +264,7 @@ public class AdminController {
         try {
             storageService.delete(photo.getStoredFileName(), photo.getStorageType());
             storageService.delete("thumb_" + photo.getStoredFileName(), photo.getStorageType());
-        } catch (IOException e) {
+        } catch (IOException _) {
             log.warn("Could not delete photo files: {}", photo.getStoredFileName());
         }
 

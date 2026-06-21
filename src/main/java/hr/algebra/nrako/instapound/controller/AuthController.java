@@ -1,6 +1,6 @@
 package hr.algebra.nrako.instapound.controller;
 
-import com.nimbusds.oauth2.sdk.AccessTokenResponse;
+import org.springframework.web.bind.annotation.*;
 import hr.algebra.nrako.instapound.enums.ActionType;
 import hr.algebra.nrako.instapound.enums.AuthProvider;
 import hr.algebra.nrako.instapound.enums.UserRole;
@@ -24,7 +24,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
@@ -42,7 +41,7 @@ public class AuthController {
     private final IpUtils ipUtils;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
+    public ResponseEntity<Object> login(@Valid @RequestBody LoginRequest request,
                                    HttpServletRequest httpRequest,
                                    HttpServletResponse httpResponse) {
         try {
@@ -75,14 +74,14 @@ public class AuthController {
                     tokens.getTokenType(),
                     tokens.getAccessTokenExpiresInSeconds()
             ));
-        } catch (Exception e) {
+        } catch (Exception _) {
             log.warn("Login failed for username {}", request.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody UserRegistrationRequest request,
+    public ResponseEntity<Object> register(@Valid @RequestBody UserRegistrationRequest request,
                                       HttpServletRequest httpRequest) {
         if (userRepository.existsByUsername(request.getUsername())) return ResponseEntity.badRequest().body("Username" +
                 " is already taken");
@@ -106,36 +105,16 @@ public class AuthController {
     }
 
     @GetMapping("/check-username/{username}")
-    public ResponseEntity<?> checkUsername(@PathVariable String username) {
+    public ResponseEntity<Object> checkUsername(@PathVariable String username) {
         boolean available = !userRepository.existsByUsername(username);
         return ResponseEntity.ok().body(new UsernameCheckResponse(available));
     }
 
     @GetMapping("/check-email/{email}")
-    public ResponseEntity<?> checkEmail(@PathVariable String email) {
+    public ResponseEntity<Object> checkEmail(@PathVariable String email) {
         boolean available = !userRepository.existsByEmail(email);
         return ResponseEntity.ok().body(new EmailCheckResponse(available));
     }
-
-//    private UserResponse toDto(User user) {
-//        return UserResponse.builder()
-//                .id(user.getId())
-//                .username(user.getUsername())
-//                .email(user.getEmail())
-//                .role(user.getRole())
-//                .packageType(user.getPackageType())
-//                .packageUsage(user.getPackageUsage())
-//                .pendingPackageType(user.getPendingPackageType())
-//                .createdAt(user.getCreatedAt())
-//                .lastLoginAt(user.getLastLoginAt())
-//                .build();
-//    }
-
-//    private String getCientIp(HttpServletRequest request) {
-//        String xForwardedFor = request.getHeader("X-Forwarded-For");
-//        if (xForwardedFor != null && !xForwardedFor.isEmpty()) return xForwardedFor.split(",")[0].trim();
-//        return request.getRemoteAddr();
-//    }
 
     private record UsernameCheckResponse(boolean available) {}
     private record EmailCheckResponse(boolean available) {}
