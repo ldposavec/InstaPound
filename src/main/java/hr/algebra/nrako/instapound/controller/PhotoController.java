@@ -362,6 +362,28 @@ public class PhotoController {
         return ResponseEntity.ok(photos.map(photoMapper::toDto));
     }
 
+    @GetMapping("/file/{filename}")
+    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
+        try {
+            Optional<Photo> photoOptional = photoRepository.findByStoredFileName(filename);
+            if (photoOptional.isEmpty()) {
+                String originalFilename = filename.startsWith("thumb_") ? filename.substring(6) : filename;
+                if (originalFilename != null) photoOptional = photoRepository.findByStoredFileName(originalFilename);
+            }
+            StorageType storageType = photoOptional.map(Photo::getStorageType).orElse(StorageType.LOCAL);
+            InputStream inputStream = storageService.retrieve(filename, storageType);
+            String contentType = photoOptional.map(Photo::getMimeType).orElse("application/octet-stream");
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                    .body(new InputStreamResource(inputStream));
+        } catch (IOException e) {
+            log.error("Error downloading file", e);
+            return ResponseEntity.notFound().build();
+        }
+
+    }
+
 //    private PhotoResponse toDto(Photo photo) {
 //        return PhotoResponse.builder()
 //                .id(photo.getId())

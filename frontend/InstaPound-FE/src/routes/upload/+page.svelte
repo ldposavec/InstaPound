@@ -11,7 +11,7 @@
     import { authStore } from '$lib/stores/auth.svelte';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    import type { ImageFormat, StorageType } from '$lib/types';
+    import type { ImageFormat, ImageFilter, StorageType } from '$lib/types';
 
     let file = $state<File | null>(null);
     let preview = $state<string | null>(null);
@@ -22,6 +22,7 @@
     let width = $state<number | ''>('');
     let height = $state<number | ''>('');
     let storageType = $state<StorageType>('LOCAL');
+    let selectedFilters = $state<ImageFilter[]>([]);
     let loading = $state(false);
     let error = $state('');
     let success = $state(false);
@@ -38,6 +39,15 @@
         { value: 'LOCAL', label: 'Local Storage' },
         { value: 'CLOUDINARY', label: 'Cloud Storage (Cloudinary)' }
     ];
+
+    const availableFilters: { value: ImageFilter; label: string; description: string }[] = [
+        { value: 'GRAYSCALE', label: 'Grayscale', description: 'Convert to black & white' },
+        { value: 'SEPIA', label: 'Sepia', description: 'Warm tone' },
+        { value: 'INVERT', label: 'Invert', description: 'Invert all colors' },
+        { value: 'BLUR', label: 'Blur', description: 'Soft blur effect' },
+        { value: 'SHARPEN', label: 'Sharpen', description: 'Enhance edges' },
+        { value: 'VINTAGE', label: 'Vintage', description: 'Retro film look' },
+    ]
 
     onMount(() => {
         if (!authStore.isAuthenticated) {
@@ -107,6 +117,14 @@
         }
     }
 
+    function toggleFilter(filter: ImageFilter) {
+        if (selectedFilters.includes(filter)) {
+            selectedFilters = selectedFilters.filter((t) => t !== filter);
+        } else {
+            selectedFilters = [...selectedFilters, filter];
+        }
+    }
+
     async function handleSubmit(e: Event) {
         e.preventDefault();
         if (!file) {
@@ -123,7 +141,8 @@
                 storageType,
                 format: format || undefined,
                 width: width || undefined,
-                height: height || undefined
+                height: height || undefined,
+                filters: selectedFilters.length > 0 ? selectedFilters : undefined,
             });
             success = true;
             setTimeout(() => {
@@ -263,6 +282,39 @@
                                     bind:value={height}
                             />
                         </div>
+
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Image filters
+                            </label>
+                            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                {#each availableFilters as filter}
+                                    <button
+                                        type="button"
+                                        onclick={() => toggleFilter(filter.value)}
+                                        class="rounded-lg border-2 px-3 py-2 text-left transition-all
+                                        {selectedFilters.includes(filter.value)
+                                        ? 'border-violet-600 bg-violet-50 dark:border-violet-400 dark:bg-violet-950/50'
+                                        : 'border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-violet-600'}"
+                                        >
+                                        <div class="flex items-center justify-between">
+                                            <span
+                                                    class="text-sm font-medium text-slate-900 dark:text-white">{filter.label}</span>
+                                            {#if selectedFilters.includes(filter.value)}
+                                                <Check class="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                                            {/if}
+                                        </div>
+                                        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{filter.description}</p>
+                                    </button>
+                                {/each}
+                            </div>
+                            {#if selectedFilters.length > 0}
+                                <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                    Selected: {selectedFilters.join(', ')}
+                                </p>
+                            {/if}
+                        </div>
+
                         <Select
                                 bind:value={storageType}
                                 options={storageOptions}
