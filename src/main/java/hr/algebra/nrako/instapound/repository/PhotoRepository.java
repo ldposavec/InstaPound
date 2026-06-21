@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -31,4 +32,6 @@ public interface PhotoRepository extends JpaRepository<Photo, Long>, JpaSpecific
     @Modifying
     @Transactional
     void deleteByUser(User user);
+
+    Optional<Photo> findByStoredFileName(String storedFileName);
 }
