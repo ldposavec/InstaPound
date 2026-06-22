@@ -1,5 +1,6 @@
 package hr.algebra.nrako.instapound.service.implementations;
 
+import hr.algebra.nrako.instapound.constants.Consts;
 import hr.algebra.nrako.instapound.enums.ActionType;
 import hr.algebra.nrako.instapound.model.dto.response.ActionLogResponse;
 import hr.algebra.nrako.instapound.model.entity.ActionLog;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,21 +29,21 @@ public class ActionLogServiceImpl implements ActionLogService {
     public void logAction(User user, ActionType actionType, String details, String ipAddress) {
         ActionLog actionLog = ActionLog.builder()
                 .user(user)
-                .username(user != null ? user.getUsername() : "anonymous")
+                .username(user != null ? user.getUsername() : Consts.ANONYMOUS)
                 .actionType(actionType)
                 .details(details)
                 .ipAddress(ipAddress)
                 .timestamp(LocalDateTime.now())
                 .build();
         actionLogRepository.save(actionLog);
-        log.info("Action logged: {} by {} - {}", actionType, user != null ? user.getUsername() : "anonymous", details);
+        log.info("Action logged: {} by {} - {}", actionType, user != null ? user.getUsername() : Consts.ANONYMOUS, details);
     }
 
     @Override
     public void logActionWithTargetPhoto(User user, ActionType actionType, String details, String ipAddress, Long targetPhotoId) {
         ActionLog actionLog = ActionLog.builder()
                 .user(user)
-                .username(user != null ? user.getUsername() : "anonymous")
+                .username(user != null ? user.getUsername() : Consts.ANONYMOUS)
                 .actionType(actionType)
                 .details(details)
                 .ipAddress(ipAddress)
@@ -50,14 +52,14 @@ public class ActionLogServiceImpl implements ActionLogService {
                 .build();
         actionLogRepository.save(actionLog);
         log.info("Action logged: {} by {} on photo {} - {}", actionType, user != null ? user.getUsername() :
-                "anonymous", targetPhotoId, details);
+                Consts.ANONYMOUS, targetPhotoId, details);
     }
 
     @Override
     public void logActionWithTargetUser(User user, ActionType actionType, String details, String ipAddress, Long targetUserId) {
         ActionLog actionLog = ActionLog.builder()
                 .user(user)
-                .username(user != null ? user.getUsername() : "anonymous")
+                .username(user != null ? user.getUsername() : Consts.ANONYMOUS)
                 .actionType(actionType)
                 .details(details)
                 .ipAddress(ipAddress)
@@ -66,13 +68,13 @@ public class ActionLogServiceImpl implements ActionLogService {
                 .build();
         actionLogRepository.save(actionLog);
         log.info("Action logged: {} by {} targeting user {} - {}", actionType, user != null ? user.getUsername() :
-                "anonymous", targetUserId, details);
+                Consts.ANONYMOUS, targetUserId, details);
     }
 
     @Override
     public void logAnonymousAction(ActionType actionType, String details, String ipAddress) {
         ActionLog actionLog = ActionLog.builder()
-                .username("anonymous")
+                .username(Consts.ANONYMOUS)
                 .actionType(actionType)
                 .details(details)
                 .ipAddress(ipAddress)
@@ -101,7 +103,7 @@ public class ActionLogServiceImpl implements ActionLogService {
     @Override
     public Map<ActionType, Long> getActionStatisticsForUser(User user) {
         List<Object[]> results = actionLogRepository.countActionsByTypeForUser(user);
-        Map<ActionType, Long> stats = new HashMap<>();
+        Map<ActionType, Long> stats = new EnumMap<>(ActionType.class);
         for (Object[] result : results) {
             stats.put((ActionType) result[0], (Long) result[1]);
         }

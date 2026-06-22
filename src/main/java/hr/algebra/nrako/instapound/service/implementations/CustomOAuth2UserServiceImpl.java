@@ -1,5 +1,6 @@
 package hr.algebra.nrako.instapound.service.implementations;
 
+import hr.algebra.nrako.instapound.constants.Consts;
 import hr.algebra.nrako.instapound.enums.AuthProvider;
 import hr.algebra.nrako.instapound.enums.PackageType;
 import hr.algebra.nrako.instapound.enums.UserRole;
@@ -27,40 +28,6 @@ import java.util.Map;
 public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
     private final UserRepository userRepository;
 
-//    @Override
-//    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-//        OAuth2User oAuth2User = super.loadUser(userRequest);
-//
-//        String registrationId = userRequest.getClientRegistration().getRegistrationId();
-//        AuthProvider authProvider = AuthProvider.valueOf(registrationId.toLowerCase());
-//
-//        String email = oAuth2User.getAttribute("email");
-//        String name  = oAuth2User.getAttribute("name");
-//        String providerId = oAuth2User.getAttribute("sub");
-//        if (providerId == null) providerId = String.valueOf(oAuth2User.getAttribute("id"));
-//
-//        User user = userRepository.findByEmail(email);
-//        if (user == null) {
-//            user = User.builder()
-//                    .username(generateUsername(name, email))
-//                    .email(email)
-//                    .authProvider(authProvider)
-//                    .providerId(providerId)
-//                    .role(UserRole.REGISTERED)
-//                    .createdAt(LocalDateTime.now())
-//                    .lastLoginAt(LocalDateTime.now())
-//                    .build();
-//            userRepository.save(user);
-//            log.info("Created new user via OAuth2: {}", email);
-//        } else {
-//            user.setLastLoginAt(LocalDateTime.now());
-//            userRepository.save(user);
-//            log.info("OAuth2 login for existing user: {}", email);
-//        }
-//
-//        return oAuth2User;
-//    }
-
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
@@ -69,9 +36,9 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
         AuthProvider authProvider = getAuthProvider(registrationId);
 
         Map<String, Object> attributes = oAuth2User.getAttributes();
-        String email = extractEmail(attributes, registrationId);
-        String name = extractName(attributes, registrationId);
-        String providerId = extractProviderId(attributes, registrationId);
+        String email = extractEmail(attributes);
+        String name = extractName(attributes);
+        String providerId = extractProviderId(attributes);
 
         if (email == null || email.isBlank()) {
             log.error("Email not found in OAuth2 user attributes for provider: {}", registrationId);
@@ -102,7 +69,7 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
         return oAuth2User;
     }
 
-    private String extractProviderId(Map<String, Object> attributes, String registrationId) {
+    private String extractProviderId(Map<String, Object> attributes) {
         if (attributes.containsKey("sub")) return (String) attributes.get("sub");
         if (attributes.containsKey("id")) {
             Object id = attributes.get("id");
@@ -111,7 +78,7 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
         return null;
     }
 
-    private String extractName(Map<String, Object> attributes, String registrationId) {
+    private String extractName(Map<String, Object> attributes) {
         if (attributes.containsKey("name")) return (String) attributes.get("name");
         if (attributes.containsKey("given_name")) {
             String givenName = (String) attributes.get("given_name");
@@ -119,14 +86,14 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
             if (familyName != null) return givenName + " " + familyName;
             return givenName;
         }
-        if (attributes.containsKey("preferred_username")) return (String) attributes.get("preferred_username");
+        if (attributes.containsKey(Consts.PREFERRED_USERNAME)) return (String) attributes.get(Consts.PREFERRED_USERNAME);
         return null;
     }
 
-    private String extractEmail(Map<String, Object> attributes, String registrationId) {
+    private String extractEmail(Map<String, Object> attributes) {
         if (attributes.containsKey("email")) return (String) attributes.get("email");
-        if (attributes.containsKey("preferred_username")) {
-            String preferredUsername = (String) attributes.get("preferred_username");
+        if (attributes.containsKey(Consts.PREFERRED_USERNAME)) {
+            String preferredUsername = (String) attributes.get(Consts.PREFERRED_USERNAME);
             if (preferredUsername != null && preferredUsername.contains("@")) return preferredUsername;
         }
         return null;

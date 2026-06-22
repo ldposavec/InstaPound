@@ -1,8 +1,8 @@
 package hr.algebra.nrako.instapound.controller;
 
-import hr.algebra.nrako.instapound.constants.Consts;
 import hr.algebra.nrako.instapound.enums.*;
 import org.springframework.web.bind.annotation.*;
+import hr.algebra.nrako.instapound.constants.Consts;
 import hr.algebra.nrako.instapound.model.dto.request.PhotoEditRequest;
 import hr.algebra.nrako.instapound.model.dto.request.PhotoSearchRequest;
 import hr.algebra.nrako.instapound.model.dto.response.PhotoResponse;

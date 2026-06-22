@@ -1,5 +1,7 @@
 package hr.algebra.nrako.instapound.service.implementations;
 
+import org.springframework.data.domain.*;
+import java.util.*;
 import hr.algebra.nrako.instapound.model.dto.response.PhotoResponse;
 import hr.algebra.nrako.instapound.model.dto.request.PhotoSearchRequest;
 import hr.algebra.nrako.instapound.model.entity.Hashtag;
@@ -12,14 +14,12 @@ import hr.algebra.nrako.instapound.repository.UserRepository;
 import hr.algebra.nrako.instapound.service.interfaces.PhotoService;
 import hr.algebra.nrako.instapound.specification.PhotoSpecification;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
-import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -96,12 +96,6 @@ public class PhotoServiceImpl implements PhotoService {
         if (user == null) return Page.empty(pageable);
 
         return photoRepository.findByUserOrderByUploadedAtDesc(user, pageable).map(photoMapper::toDto);
-//        Pageable pageable = PageRequest.of(0, 90, Sort.by(Sort.Direction.DESC, "uploadedAt"));
-//        return photoRepository.findByUserOrderByUploadedAtDesc(user, pageable)
-//                .getContent()
-//                .stream()
-//                .map(photoMapper::toDto)
-//                .collect(Collectors.toList());
     }
 
     @Override
@@ -114,29 +108,6 @@ public class PhotoServiceImpl implements PhotoService {
 
         return photoRepository.findAll(masterSpecification, pageable).map(photoMapper::toDto);
     }
-
-//    private PhotoResponse toDto(Photo photo) {
-//        return PhotoResponse.builder()
-//                .id(photo.getId())
-//                .originalFileName(photo.getOriginalFileName())
-//                .description(photo.getDescription())
-//                .hashtags(photo.getHashtags().stream()
-//                        .map(Hashtag::getTag)
-//                        .collect(Collectors.toSet()))
-//                .thumbnailUrl(photo.getThumbnailUrl())
-//                .imageUrl(photo.getStorageUrl())
-//                .processedUrl(photo.getProcessedUrl())
-//                .author(photo.getUser().getUsername())
-//                .authorId(photo.getUser().getId())
-//                .fileSizeBytes(photo.getFileSizeBytes())
-//                .width(photo.getWidth())
-//                .height(photo.getHeight())
-//                .uploadedAt(photo.getUploadedAt())
-//                .editedAt(photo.getEditedAt())
-//                .downloadCount(photo.getDownloadCount())
-//                .viewCount(photo.getViewCount())
-//                .build();
-//    }
 
     private Photo toEntity(PhotoResponse response) throws ParseException {
         Set<Hashtag> hashtags = response.getHashtags() == null ? new HashSet<>()

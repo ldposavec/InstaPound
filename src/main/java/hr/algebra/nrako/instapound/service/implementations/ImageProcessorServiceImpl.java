@@ -1,5 +1,6 @@
 package hr.algebra.nrako.instapound.service.implementations;
 
+import java.awt.*;
 import hr.algebra.nrako.instapound.enums.ImageFilter;
 import hr.algebra.nrako.instapound.enums.ImageFormat;
 import hr.algebra.nrako.instapound.model.valueobject.ImageProcessingOptions;
@@ -8,7 +9,6 @@ import org.imgscalr.Scalr;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
@@ -33,10 +33,10 @@ public class ImageProcessorServiceImpl {
             }
         }
 
-        return convertToFormat(image, options.getImageFormat(), options.getQuality());
+        return convertToFormat(image, options.getImageFormat());
     }
 
-    private byte[] convertToFormat(BufferedImage image, ImageFormat format, Integer quality) throws IOException {
+    private byte[] convertToFormat(BufferedImage image, ImageFormat format) throws IOException {
         String formatName = format != null ? format.name().toLowerCase() : "jpeg";
         if (formatName.equals("jpg")) formatName = "jpeg";
 
@@ -62,16 +62,16 @@ public class ImageProcessorServiceImpl {
         BufferedImage result = new BufferedImage(sepia.getWidth(), sepia.getHeight(), BufferedImage.TYPE_INT_RGB);
         int centerX = sepia.getWidth() / 2;
         int centerY = sepia.getHeight() / 2;
-        double maxDist = Math.sqrt(centerX * centerX + centerY * centerY);
+        double maxDist = Math.sqrt((double)centerX * centerX + centerY * centerY);
 
         for (int y = 0; y < sepia.getHeight(); y++) {
             for (int x = 0; x < sepia.getWidth(); x++) {
                 Color color = new Color(sepia.getRGB(x, y));
-                double dist = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                double dist = Math.sqrt(Math.pow(x - (double)centerX, 2) + Math.pow(y - (double)centerY, 2));
                 double factor = 1.0 - (dist / maxDist) * 0.3;
-                int r = (int) Math.max(0, Math.min(255, color.getRed() * factor));
-                int g = (int) Math.max(0, Math.min(255, color.getGreen() * factor));
-                int b = (int) Math.max(0, Math.min(255, color.getBlue() * factor));
+                int r = (int) Math.clamp(color.getRed() * factor, 0, 255);
+                int g = (int) Math.clamp(color.getGreen() * factor, 0, 255);
+                int b = (int) Math.clamp(color.getBlue() * factor, 0, 255);
                 result.setRGB(x, y, new Color(r, g, b).getRGB());
             }
         }

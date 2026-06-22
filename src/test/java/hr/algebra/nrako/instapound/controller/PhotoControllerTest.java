@@ -31,10 +31,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+//@ActiveProfiles("test")
 @WebMvcTest(controllers = PhotoController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@ImportAutoConfiguration(org.springframework.boot.data.autoconfigure.web.DataWebAutoConfiguration.class)
-public class PhotoControllerTest {
+@ImportAutoConfiguration(
+        value = org.springframework.boot.data.autoconfigure.web.DataWebAutoConfiguration.class,
+        exclude = {
+                org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration.class,
+                org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration.class
+        }
+)
+class PhotoControllerTest {
 
     @Autowired
     private MockMvc mvc;

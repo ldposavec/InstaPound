@@ -24,23 +24,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(savedUser);
     }
 
-//    @Override
-//    public Optional<UserResponse> update(UserResponse user) {
-//        Optional<User> existingUserOpt = userRepository.findById(user.getId());
-//        if (existingUserOpt.isEmpty()) {
-//            return Optional.empty();
-//        }
-//
-//        User userToUpdate = existingUserOpt.get();
-//
-//        userToUpdate.setPackageChangeEffectiveDate(user.getPackageChangeEffectiveDate());
-//        userToUpdate.setEmail(user.getEmail());
-//        userToUpdate.setPackageType(user.getPackageType());
-//        userToUpdate.setPendingPackageType(user.getPendingPackageType());
-//
-//        return Optional.of(toDto(userToUpdate));
-//    }
-
     @Override
     public Optional<UserResponse> getById(Long id) {
         return userRepository.findById(id).map(userMapper::toDto);
@@ -69,18 +52,4 @@ public class UserServiceImpl implements UserService {
                 .lastLoginAt(user.getLastLoginAt())
                 .build();
     }
-
-//    private UserResponse toDto(User user) {
-//        return UserResponse.builder()
-//                .id(user.getId())
-//                .username(user.getUsername())
-//                .email(user.getEmail())
-//                .role(user.getRole())
-//                .packageType(user.getPackageType())
-//                .packageUsage(user.getPackageUsage())
-//                .pendingPackageType(user.getPendingPackageType())
-//                .createdAt(user.getCreatedAt())
-//                .lastLoginAt(user.getLastLoginAt())
-//                .build();
-//    }
 }

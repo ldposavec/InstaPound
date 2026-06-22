@@ -1,8 +1,8 @@
 package hr.algebra.nrako.instapound.model.entity;
 
+import jakarta.persistence.*;
 import hr.algebra.nrako.instapound.enums.PackageType;
 import hr.algebra.nrako.instapound.model.valueobject.PackageLimits;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

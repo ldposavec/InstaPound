@@ -98,8 +98,10 @@ class TokenServiceImplTest {
         when(authTokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(storedRefresh));
         when(authTokenRepository.findAllByUsernameAndRevokedFalse("alice")).thenReturn(List.of(storedRefresh));
 
+        String refreshToken = initial.getRefreshToken();
+
         IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> tokenService.rotateRefreshToken(initial.getRefreshToken()));
+                () -> tokenService.rotateRefreshToken(refreshToken));
 
         assertTrue(ex.getMessage().contains("Refresh token reuse detected"));
         verify(authTokenRepository).saveAll(anyList());

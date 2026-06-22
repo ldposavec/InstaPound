@@ -1,7 +1,7 @@
 package hr.algebra.nrako.instapound.model.entity;
 
-import hr.algebra.nrako.instapound.enums.ActionType;
 import jakarta.persistence.*;
+import hr.algebra.nrako.instapound.enums.ActionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

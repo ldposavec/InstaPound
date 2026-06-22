@@ -10,7 +10,8 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PhotoSpecification {
+public final class PhotoSpecification {
+    private PhotoSpecification() {}
 
     public static Specification<Photo> fromSearchRequest(PhotoSearchRequest searchRequest) {
         return ((root, query, criteriaBuilder) -> {

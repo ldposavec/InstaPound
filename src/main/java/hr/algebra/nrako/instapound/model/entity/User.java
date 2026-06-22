@@ -1,13 +1,13 @@
 package hr.algebra.nrako.instapound.model.entity;
 
+import jakarta.persistence.*;
+import lombok.*;
 import hr.algebra.nrako.instapound.enums.AuthProvider;
 import hr.algebra.nrako.instapound.enums.PackageType;
 import hr.algebra.nrako.instapound.enums.UserRole;
 import hr.algebra.nrako.instapound.model.valueobject.PackageUsage;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,14 +35,6 @@ public class User {
     private String email;
 
     private String password;
-
-//    @ManyToMany(fetch = FetchType.EAGER)
-//    @JoinTable(
-//            name = "USER_ROLES",
-//            joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
-//            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
-//    )
-//    private Set<UserRole> userRoles;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

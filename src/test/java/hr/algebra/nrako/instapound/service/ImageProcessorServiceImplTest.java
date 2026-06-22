@@ -1,12 +1,12 @@
 package hr.algebra.nrako.instapound.service;
 
+import java.awt.*;
 import hr.algebra.nrako.instapound.model.valueobject.ImageProcessingOptions;
 import hr.algebra.nrako.instapound.service.implementations.ImageProcessorServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,7 +14,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-public class ImageProcessorServiceImplTest {
+class ImageProcessorServiceImplTest {
 
     private ImageProcessorServiceImpl service;
 
