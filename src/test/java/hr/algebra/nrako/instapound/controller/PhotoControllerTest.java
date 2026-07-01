@@ -26,8 +26,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.Collections;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -68,9 +69,9 @@ class PhotoControllerTest {
     private IpUtils ipUtils;
 
     @Test
-    void testBrowsePhotos() throws Exception {
+    void browsePhotos_shouldReturnPageOfPhotos() throws Exception {
         Photo p = Photo.builder().id(1L).originalFileName("a.jpg").build();
-        when(photoRepository.findAllByOrderByUploadedAtDesc(org.mockito.ArgumentMatchers.any(Pageable.class))).thenReturn(new PageImpl<>(Collections.singletonList(p), PageRequest.of(0,15), 1));
+        when(photoRepository.findAllByOrderByUploadedAtDesc(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.singletonList(p), PageRequest.of(0,15), 1));
         when(photoMapper.toDto(p)).thenReturn(hr.algebra.nrako.instapound.model.dto.response.PhotoResponse.builder().id(1L).originalFileName("a.jpg").build());
 
         mvc.perform(get("/api/photos/browse").accept(MediaType.APPLICATION_JSON))
@@ -79,7 +80,7 @@ class PhotoControllerTest {
     }
 
     @Test
-    void testGetPhotoById() throws Exception {
+    void getPhoto_shouldReturnPhoto() throws Exception {
         Photo p = Photo.builder().id(1L).originalFileName("a.jpg").build();
         when(photoRepository.findById(1L)).thenReturn(Optional.of(p));
         when(photoMapper.toDto(p)).thenReturn(hr.algebra.nrako.instapound.model.dto.response.PhotoResponse.builder().id(1L).originalFileName("a.jpg").build());

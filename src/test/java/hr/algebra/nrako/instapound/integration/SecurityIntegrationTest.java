@@ -122,29 +122,4 @@ public class SecurityIntegrationTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"));
     }
-
-//    private void createAndPersistAccessToken(String rawToken, String username, LocalDateTime expiresAt) {
-//        AuthToken authToken = AuthToken.builder()
-//                .tokenId(UUID.randomUUID().toString())
-//                .tokenValue(rawToken)
-//                .tokenHash(hashToken(rawToken))
-//                .tokenType(AuthTokenType.ACCESS)
-//                .revoked(false)
-//                .expired(expiresAt.isBefore(LocalDateTime.now()))
-//                .issuedAt(LocalDateTime.now().minusMinutes(20))
-//                .expiresAt(expiresAt)
-//                .username(username)
-//                .build();
-//        authTokenRepository.save(authToken);
-//    }
-//
-//    private String hashToken(String rawToken) {
-//        try {
-//            MessageDigest md = MessageDigest.getInstance("SHA-256");
-//            byte[] hash = md.digest(rawToken.getBytes(StandardCharsets.UTF_8));
-//            return Base64.getUrlEncoder().encodeToString(hash);
-//        } catch (Exception e) {
-//            throw new IllegalStateException("SHA-256 not available", e);
-//        }
-//    }
 }
