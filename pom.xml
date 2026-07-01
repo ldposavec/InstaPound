@@ -54,11 +54,11 @@
             <artifactId>spring-boot-starter-web</artifactId>
             <version>4.1.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.session</groupId>
-            <artifactId>spring-session-jdbc</artifactId>
-            <version>4.1.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.session</groupId>-->
+<!--            <artifactId>spring-session-jdbc</artifactId>-->
+<!--            <version>4.1.0</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -170,6 +170,7 @@
                         <exclude>hr/algebra/nrako/instapound/config/**</exclude>
                         <exclude>hr/algebra/nrako/instapound/InstaPoundApplication.class</exclude>
                         <exclude>hr/algebra/nrako/instapound/aspect/**</exclude>
+                        <exclude>hr/algebra/nrako/instapound/controller/VulnController</exclude>
                     </excludes>
                 </configuration>
                 <executions>
