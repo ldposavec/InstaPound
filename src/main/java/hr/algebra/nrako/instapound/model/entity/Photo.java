@@ -1,8 +1,8 @@
 package hr.algebra.nrako.instapound.model.entity;
 
-import hr.algebra.nrako.instapound.enums.StorageType;
 import jakarta.persistence.*;
 import lombok.*;
+import hr.algebra.nrako.instapound.enums.StorageType;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;

@@ -1,5 +1,6 @@
 package hr.algebra.nrako.instapound.controller;
 
+import org.springframework.web.bind.annotation.*;
 import hr.algebra.nrako.instapound.enums.ActionType;
 import hr.algebra.nrako.instapound.model.dto.request.PackageChangeRequest;
 import hr.algebra.nrako.instapound.model.dto.response.PackageInfoResponse;
@@ -19,10 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -67,7 +66,7 @@ public class UserController {
 
     @PostMapping("/package/change")
     @PreAuthorize("hasAnyRole('REGISTERED', 'ADMIN')")
-    public ResponseEntity<?> requestPackageChange(
+    public ResponseEntity<Object> requestPackageChange(
             @RequestBody PackageChangeRequest request,
             @AuthenticationPrincipal UserDetails userDetails,
             HttpServletRequest httpRequest
@@ -87,7 +86,7 @@ public class UserController {
 
     @DeleteMapping("/package/change")
     @PreAuthorize("hasAnyRole('REGISTERED', 'ADMIN')")
-    public ResponseEntity<?> cancelPackageChange(@AuthenticationPrincipal UserDetails userDetails, HttpServletRequest request) {
+    public ResponseEntity<Object> cancelPackageChange(@AuthenticationPrincipal UserDetails userDetails, HttpServletRequest request) {
         User user = userRepository.findByUsername(userDetails.getUsername());
         if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
         if (user.getPendingPackageType() == null) {

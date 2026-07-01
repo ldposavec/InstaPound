@@ -2,6 +2,7 @@ package hr.algebra.nrako.instapound.service.storage;
 
 import hr.algebra.nrako.instapound.config.StorageConfig;
 import hr.algebra.nrako.instapound.enums.StorageType;
+import hr.algebra.nrako.instapound.exceptions.StorageInitializationException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,7 @@ public class LocalStorageStrategyImpl implements StorageStrategy {
             Files.createDirectories(thumbnailLocation);
             log.info("Local storage initialized at: {}", rootLocation);
         } catch (IOException e) {
-            throw new RuntimeException("Could not initialize storage location", e);
+            throw new StorageInitializationException("Could not initialize storage location", e);
         }
     }
 

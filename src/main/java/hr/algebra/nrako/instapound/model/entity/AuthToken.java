@@ -1,8 +1,8 @@
 package hr.algebra.nrako.instapound.model.entity;
 
-import hr.algebra.nrako.instapound.enums.AuthTokenType;
 import jakarta.persistence.*;
 import lombok.*;
+import hr.algebra.nrako.instapound.enums.AuthTokenType;
 
 import java.time.LocalDateTime;
 

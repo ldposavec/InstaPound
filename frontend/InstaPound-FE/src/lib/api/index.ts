@@ -90,10 +90,6 @@ function authHeaders(): Record<string, string> {
 }
 
 async function get<T>(endpoint: string): Promise<T> {
-    // const response = await fetch(`${API_BASE}${endpoint}`, {
-    //     credentials: 'include'
-    // });
-    // return handleResponse<T>(response);
     let response = await fetch(`${API_BASE}${endpoint}`, {
         headers: { ...authHeaders() },
         credentials: 'include'

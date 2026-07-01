@@ -10,8 +10,9 @@ import hr.algebra.nrako.instapound.utils.IpUtils;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -32,6 +33,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@ImportAutoConfiguration(
+        value = org.springframework.boot.data.autoconfigure.web.DataWebAutoConfiguration.class,
+        exclude = {
+                org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration.class,
+                org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration.class
+        }
+)
 class AuthControllerTest {
 
     @Autowired
@@ -90,13 +98,6 @@ class AuthControllerTest {
         assertThat(refreshCookie.getSecure()).isTrue();
         assertThat(refreshCookie.getPath()).isEqualTo("/api/auth/token");
         assertThat(refreshCookie.getMaxAge()).isEqualTo(7 * 24 * 60 * 60);
-//        mockMvc.perform(post("/api/auth/login")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content("{\"username\":\"alice\",\"password\":\"secret\"}"))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.accessToken").value("access-token"))
-//                .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
-//                .andExpect(jsonPath("$.tokenType").value("Bearer"));
     }
 }
 

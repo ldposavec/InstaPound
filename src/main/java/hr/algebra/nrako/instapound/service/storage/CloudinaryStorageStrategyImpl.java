@@ -78,7 +78,6 @@ public class CloudinaryStorageStrategyImpl implements StorageStrategy {
         if (cloudinary == null) throw new IOException("Cloudinary is not configured");
         try {
             String url = getUrl(filename);
-//            return URI.create(url).toURL().openStream();
             URI uri = URI.create(url);
             String host = uri.getHost();
             if (host == null || !host.endsWith("cloudinary.com")) throw new IOException("Invalid cloudinary URL: " + url);

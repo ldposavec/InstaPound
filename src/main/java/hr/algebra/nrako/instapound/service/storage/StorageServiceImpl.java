@@ -1,8 +1,6 @@
 package hr.algebra.nrako.instapound.service.storage;
 
-import hr.algebra.nrako.instapound.config.StorageConfig;
 import hr.algebra.nrako.instapound.enums.StorageType;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +14,9 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class StorageServiceImpl {
-    private final StorageConfig storageConfig;
     private final Map<StorageType, StorageStrategy> strategies;
 
-    public StorageServiceImpl(StorageConfig storageConfig, List<StorageStrategy> strategyList) {
-        this.storageConfig = storageConfig;
+    public StorageServiceImpl(List<StorageStrategy> strategyList) {
         this.strategies = strategyList.stream()
                 .collect(Collectors.toMap(StorageStrategy::getStorageType, Function.identity()));
         log.info("Storage service initialized with {} strategies", strategies.size());
@@ -48,7 +44,7 @@ public class StorageServiceImpl {
         getStrategy(type).delete(filename);
     }
 
-    public String getUrl(String filename, StorageType type) throws IOException {
+    public String getUrl(String filename, StorageType type) {
         return getStrategy(type).getUrl(filename);
     }
 }

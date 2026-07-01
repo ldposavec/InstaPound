@@ -24,7 +24,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
 
-    private static final long ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
+    private static final long ACCESS_TOKEN_TTL_SECONDS = 15L * 60;
     private static final long REFRESH_TOKEN_TTL_SECONDS = 7L * 24 * 60 * 60;
 
     private final AuthTokenRepository authTokenRepository;

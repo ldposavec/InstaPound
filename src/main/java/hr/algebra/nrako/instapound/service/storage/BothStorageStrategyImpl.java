@@ -53,7 +53,7 @@ public class BothStorageStrategyImpl implements StorageStrategy {
         local.delete(filename);
         try {
             cloudinary.delete(filename);
-        } catch (IOException e) {
+        } catch (IOException _) {
             log.warn("Could not delete file from Cloudinary: {}", filename);
         }
     }

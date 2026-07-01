@@ -9,5 +9,4 @@ public interface UserService {
     Optional<UserResponse> getByEmail(String email);
     Optional<UserResponse> getByUsername(String username);
     UserResponse save(UserResponse user);
-//    Optional<UserResponse> update(UserResponse user);
 }

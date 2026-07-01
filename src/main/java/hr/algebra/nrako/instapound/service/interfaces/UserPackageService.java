@@ -15,5 +15,4 @@ public interface UserPackageService {
     boolean canChangePackage(User user);
     void processPendingPackageChanges();
     UserPackage save(UserPackage userPackage);
-//    UserPackage update(UserPackage userPackage);
 }

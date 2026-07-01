@@ -1,10 +1,13 @@
 package hr.algebra.nrako.instapound.controller;
 
+import hr.algebra.nrako.instapound.config.TestSecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -13,7 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class AuthControllerIntegrationTest {
+@ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
+class AuthControllerIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
@@ -21,8 +26,8 @@ public class AuthControllerIntegrationTest {
     @Test
     void loginEndpointShouldReturn200() throws Exception {
         mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"username\": \"admin\", \"password\": \"admin123\"}"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\": \"admin\", \"password\": \"admin123\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -32,3 +37,5 @@ public class AuthControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 }
+
+

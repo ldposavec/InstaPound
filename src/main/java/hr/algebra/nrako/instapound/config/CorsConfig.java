@@ -15,15 +15,22 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-//        config.addAllowedOrigin("http://localhost:5174");
-//        config.addAllowedOrigin("http://localhost:5173");
-        config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://frontend:*"));
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
+//        config.setAllowedOriginPatterns(List.of("http://localhost:5173", "http://frontend:*")); //:5173 if needed
+        config.setAllowedOriginPatterns(List.of("http://localhost:5173", "http://localhost:4173")); //:5173 if needed
+//        config.addAllowedHeader("*");
+//        config.addAllowedMethod("*");
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        config.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With"
+        ));
         config.addExposedHeader("Authorization");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/api/**", config);
         return source;
     }
 }

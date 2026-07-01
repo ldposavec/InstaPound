@@ -1,4 +1,4 @@
-package hr.algebra.nrako.instapound.service;
+package hr.algebra.nrako.instapound.service.implementations;
 
 import hr.algebra.nrako.instapound.enums.AuthTokenType;
 import hr.algebra.nrako.instapound.enums.UserRole;
@@ -7,7 +7,6 @@ import hr.algebra.nrako.instapound.model.entity.AuthToken;
 import hr.algebra.nrako.instapound.model.entity.User;
 import hr.algebra.nrako.instapound.repository.AuthTokenRepository;
 import hr.algebra.nrako.instapound.repository.UserRepository;
-import hr.algebra.nrako.instapound.service.implementations.TokenServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -62,7 +62,7 @@ class TokenServiceImplTest {
     }
 
     @Test
-    void issueTokenPairCreatesTwoDistinctTokens() {
+    void issueTokenPair_shouldCreateTwoDistinctTokens() {
         TokenPairResponse response = tokenService.issueTokenPair(user);
 
         assertNotNull(response.getAccessToken());
@@ -75,7 +75,7 @@ class TokenServiceImplTest {
     }
 
     @Test
-    void rotateRefreshTokenRevokesOldTokenAndIssuesNewPair() {
+    void rotateRefreshToken_shouldRevokeOldTokenAndIssuesNewPair() {
         TokenPairResponse initial = tokenService.issueTokenPair(user);
         AuthToken storedRefresh = refreshTokenRef.get();
         when(authTokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(storedRefresh));
@@ -90,7 +90,7 @@ class TokenServiceImplTest {
     }
 
     @Test
-    void reuseOfRefreshTokenRevokesAllUserTokens() {
+    void reuseOfRefreshToken_shouldRevokeAllUserTokens() {
         TokenPairResponse initial = tokenService.issueTokenPair(user);
         AuthToken storedRefresh = refreshTokenRef.get();
         storedRefresh.setRevoked(true);
@@ -98,11 +98,45 @@ class TokenServiceImplTest {
         when(authTokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(storedRefresh));
         when(authTokenRepository.findAllByUsernameAndRevokedFalse("alice")).thenReturn(List.of(storedRefresh));
 
+        String refreshToken = initial.getRefreshToken();
+
         IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> tokenService.rotateRefreshToken(initial.getRefreshToken()));
+                () -> tokenService.rotateRefreshToken(refreshToken));
 
         assertTrue(ex.getMessage().contains("Refresh token reuse detected"));
         verify(authTokenRepository).saveAll(anyList());
+    }
+
+    @Test
+    void resolveUserByAccessToken_shouldReturnEmptyForNullToken() {
+        Optional<User> result = tokenService.resolveUserByAccessToken(null);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void resoleUesrByAccessToken_shouldReturnEmptyForBlankToken() {
+        Optional<User> result = tokenService.resolveUserByAccessToken("");
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void resolveUserByRefreshToken_shouldReturnUserForValidToken() {
+        AuthToken validToken = AuthToken.builder()
+                .tokenId("id").tokenValue("val").tokenHash("hash")
+                .tokenType(AuthTokenType.ACCESS)
+                .revoked(false).expired(false)
+                .issuedAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .username("alice")
+                .build();
+
+        when(authTokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(validToken));
+        when(userRepository.findByUsername("alice")).thenReturn(user);
+
+        Optional<User> result = tokenService.resolveUserByAccessToken("valid-access-token");
+
+        assertTrue(result.isPresent());
+        assertEquals("alice", result.get().getUsername());
     }
 }
 
